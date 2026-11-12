@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Khung dữ liệu tuyển dụng cho ITviec, TopCV và VietnamWorks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Nguon",
+    "Ma_Tin_Nguon",
+    "URL_Goc",
+    "URL_Tim_Kiem",
+    "Tu_Khoa_Tim_Kiem",
+    "Timestamp",
+    "Tieu_De",
+    "Cong_Ty",
+    "Dia_Diem_Goc",
+    "Luong_Goc",
+    "Kinh_Nghiem_Goc",
+    "Cap_Bac_Goc",
+    "Hinh_Thuc_Lam_Viec_Goc",
+    "Loai_Hop_Dong_Goc",
+    "Ngay_Dang_Goc",
+    "Mo_Ta_Cong_Viec_Goc",
+    "Yeu_Cau_Goc",
+    "Quyen_Loi_Goc",
+    "Ky_Nang_Goc"
+  ],
+  "properties": {
+    "Nguon": {
+      "type": "string",
+      "enum": ["itviec", "topcv", "vietnamworks"],
+      "description": "Mã nền tảng theo đúng một trong ba giá trị cố định."
+    },
+    "Ma_Tin_Nguon": {
+      "type": ["string", "null"],
+      "description": "ID tin do nền tảng cung cấp, giữ nguyên dưới dạng chuỗi; null nếu không có."
+    },
+    "URL_Goc": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://",
+      "description": "URL trang chi tiết tin tuyển dụng, trước khi bỏ tham số theo dõi để khử trùng."
+    },
+    "URL_Tim_Kiem": {
+      "type": ["string", "null"],
+      "description": "URL trang kết quả tìm kiếm hoặc danh mục nơi phát hiện tin."
+    },
+    "Tu_Khoa_Tim_Kiem": {
+      "type": ["string", "null"],
+      "description": "Từ khóa hoặc bộ lọc dùng trong lần cào, giữ nguyên cách ghi."
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Thời điểm crawler lấy tin, ISO 8601 có múi giờ, ví dụ 2026-11-13T09:30:00+07:00. Không phải ngày đăng tin."
+    },
+    "Tieu_De": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "Tiêu đề tin như được hiển thị trên nguồn; bắt buộc có nội dung."
+    },
+    "Cong_Ty": {
+      "type": ["string", "null"],
+      "description": "Tên công ty hiển thị, null nếu nguồn ẩn hoặc không có."
+    },
+    "Dia_Diem_Goc": {
+      "type": ["string", "null"],
+      "description": "Địa điểm nguyên văn, chưa quy về thành phố hoặc Remote."
+    },
+    "Luong_Goc": {
+      "type": ["string", "null"],
+      "description": "Lương nguyên văn, gồm cả 'Thỏa thuận', đơn vị tiền và kỳ trả nếu có; chưa quy đổi."
+    },
+    "Kinh_Nghiem_Goc": {
+      "type": ["string", "null"],
+      "description": "Yêu cầu kinh nghiệm nguyên văn, chưa đổi thành số năm."
+    },
+    "Cap_Bac_Goc": {
+      "type": ["string", "null"],
+      "description": "Cấp bậc hoặc seniority nguyên văn từ nguồn."
+    },
+    "Hinh_Thuc_Lam_Viec_Goc": {
+      "type": ["string", "null"],
+      "description": "On-site, hybrid, remote hoặc cách ghi khác của nguồn; chưa phân loại."
+    },
+    "Loai_Hop_Dong_Goc": {
+      "type": ["string", "null"],
+      "description": "Toàn thời gian, bán thời gian, thực tập, hợp đồng hoặc cách ghi khác của nguồn."
+    },
+    "Ngay_Dang_Goc": {
+      "type": ["string", "null"],
+      "description": "Ngày đăng nguyên văn, kể cả dạng tương đối như '2 ngày trước'; không dùng thay Timestamp."
+    },
+    "Mo_Ta_Cong_Viec_Goc": {
+      "type": ["string", "null"],
+      "description": "Toàn bộ phần mô tả công việc lấy được, chưa làm sạch hoặc trích xuất kỹ năng."
+    },
+    "Yeu_Cau_Goc": {
+      "type": ["string", "null"],
+      "description": "Phần yêu cầu ứng viên nguyên văn nếu nguồn tách riêng; null nếu chỉ nằm trong mô tả."
+    },
+    "Quyen_Loi_Goc": {
+      "type": ["string", "null"],
+      "description": "Phần quyền lợi nguyên văn nếu nguồn tách riêng; null nếu chỉ nằm trong mô tả."
+    },
+    "Ky_Nang_Goc": {
+      "type": ["string", "null"],
+      "description": "Danh sách kỹ năng/tag nguyên văn do website hiển thị; chưa suy ra từ mô tả."
+    }
+  }
+}

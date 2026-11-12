@@ -1,10 +1,10 @@
 # Thu thập và khai phá dữ liệu tuyển dụng CNTT tại Việt Nam
 
-[![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB)](requirements.txt)
-[![Playwright 1.65.1](https://img.shields.io/badge/Playwright-1.65.1-2EAD33)](requirements.txt)
-[![pandas 3.1.1](https://img.shields.io/badge/pandas-3.1.1-150458)](requirements.txt)
-[![scikit-learn 1.7.2](https://img.shields.io/badge/scikit--learn-1.7.2-F7931E)](requirements.txt)
-[![mlxtend 0.23.4](https://img.shields.io/badge/mlxtend-0.23.4-6A5ACD)](requirements.txt)
+[![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB)](requirements.txt)
+[![Playwright 1.65.1+](https://img.shields.io/badge/Playwright-1.65.1%2B-2EAD33)](requirements.txt)
+[![pandas 3.1.1+](https://img.shields.io/badge/pandas-3.1.1%2B-150458)](requirements.txt)
+[![scikit-learn 1.7.2+](https://img.shields.io/badge/scikit--learn-1.7.2%2B-F7931E)](requirements.txt)
+[![mlxtend 0.23.4+](https://img.shields.io/badge/mlxtend-0.23.4%2B-6A5ACD)](requirements.txt)
 ![Project status: planning](https://img.shields.io/badge/status-planning-yellow)
 
 **Nội Dung:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
@@ -117,15 +117,16 @@ Ngưỡng cuối cùng, số cụm, mô hình đối chứng, cách chia tập v
 
 **Quy đổi USD/VND:** nhóm sẽ dùng **một tỷ giá áp dụng cho snapshot dữ liệu** để có thể tái lập, lưu giá trị tỷ giá, nguồn công bố, URL và ngày truy cập trong cấu hình và README trước khi chạy bước chuẩn hóa. Chưa có tỷ giá thực tế được chọn, nên hiện không thể diễn giải các cột lương quy đổi hoặc huấn luyện `salary_band`. Tin thiếu kỳ trả lương xác định sẽ không được tự quy đổi sang lương tháng.
 
-## 7. Cấu trúc thư mục dự kiến
+## 7. Cấu trúc thư mục
 
 ```text
 README.md
 requirements.txt
 schema.json
 .gitignore
-common/base_scraper.py
 crawlers/
+  __init__.py
+  base_crawler.py
   scrape_itviec.py
   scrape_topcv.py
   scrape_vietnamworks.py
@@ -147,7 +148,7 @@ reports/NhomTamTau_BaoCao_BaiTapLon.pdf
 reports/NhomTamTau_Slide_BaoCao.pdf
 ```
 
-Đây là **cấu trúc đích**, chưa phải danh sách tệp hiện có. `.gitignore` cần loại trừ `.venv/`, cache, hồ sơ trình duyệt và tệp chứa khóa; việc đưa CSV lên kho mã phụ thuộc quyền chia sẻ dữ liệu và dung lượng.
+Đây là **cấu trúc đích**, chưa phải danh sách tệp hiện có. `crawlers/base_crawler.py` cung cấp `BaseCrawler` và `SearchTask`: mỗi crawler đặt `SOURCE`, khai báo các trang tìm kiếm trong `iter_search_tasks()`, lấy URL tin qua `extract_job_urls()` và trả các trường gốc theo `schema.json` trong `parse_job()`. Gọi `crawl(max_jobs=5)` để chạy thử hoặc `crawl()` để xuất CSV riêng cho nguồn. `crawlers/__init__.py` giúp import các lớp này như một package; đây không phải bước xử lý dữ liệu cần chạy trước khi chuẩn hóa. `.gitignore` cần loại trừ `.venv/`, cache, hồ sơ trình duyệt và tệp chứa khóa; việc đưa CSV lên kho mã phụ thuộc quyền chia sẻ dữ liệu và dung lượng.
 
 ## 8. Tải, cài đặt và chạy lại
 
@@ -213,7 +214,7 @@ Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** 
 | Hạn theo bảng phân công | Công việc | Phụ trách | Trạng thái trong bảng |
 | --- | --- | --- | --- |
 | 12/11 | Chọn nguồn, từ khóa và thống nhất cấu trúc dữ liệu | Cả nhóm | Đã làm |
-| 12/11 | README hướng dẫn chạy và bảng tiến độ; `requirements.txt`; `schema.json`; `common/base_scraper.py` | Lưu Đức Linh | Đang làm |
+| 12/11 | README hướng dẫn chạy và bảng tiến độ; `requirements.txt`; `schema.json`; `crawlers/base_crawler.py` | Lưu Đức Linh | Đang làm |
 | 16/11 | Cào và kiểm tra mẫu ITviec, TopCV, VietnamWorks; lưu `URL_Goc` và `Timestamp` | Linh; Khoa; Hiếu theo bảng nguồn | Chưa làm |
 | 17/11 | `validate_schema.py`: thống kê dòng hợp lệ/lỗi theo nguồn và xuất log | Trần Đăng Khoa | Chưa làm |
 | 17/11 | Gộp ba nguồn, khử trùng và tạo `raw_data.csv` | Cả nhóm; Khoa phụ trách công cụ và thống kê gộp | Chưa làm |
