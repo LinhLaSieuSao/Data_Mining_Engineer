@@ -1,6 +1,13 @@
 # Thu thập và khai phá dữ liệu tuyển dụng CNTT tại Việt Nam
 
-**Nội Dung:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy lại](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm nộp](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
+[![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB)](requirements.txt)
+[![Playwright 1.65.1](https://img.shields.io/badge/Playwright-1.65.1-2EAD33)](requirements.txt)
+[![pandas 3.1.1](https://img.shields.io/badge/pandas-3.1.1-150458)](requirements.txt)
+[![scikit-learn 1.7.2](https://img.shields.io/badge/scikit--learn-1.7.2-F7931E)](requirements.txt)
+[![mlxtend 0.23.4](https://img.shields.io/badge/mlxtend-0.23.4-6A5ACD)](requirements.txt)
+![Project status: planning](https://img.shields.io/badge/status-planning-yellow)
+
+**Nội Dung:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
 
 ## 1. Giới thiệu
 
