@@ -1,10 +1,6 @@
 # Thu thập và khai phá dữ liệu tuyển dụng CNTT tại Việt Nam
 
-> **Trạng thái:** Đây là khung dự án của nhóm Tam Tấu. Các file, lệnh chạy và phương pháp ghi là **dự kiến** cho đến khi được triển khai và kiểm thử. README sẽ được cập nhật theo tiến độ; chưa có kết quả nghiên cứu để công bố.
-
-**Đọc nhanh:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy lại](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm nộp](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
-
-**Bắt đầu nhanh khi dự án hoàn thiện:** tải repository → cài `requirements.txt` → chạy pipeline hoặc mở notebook với snapshot `clean_data.csv`. Các lệnh chính xác sẽ được điền sau khi code chạy thử thành công; hiện chưa thể tái tạo kết quả bằng ba bước này.
+**Nội Dung:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy lại](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm nộp](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
 
 ## 1. Giới thiệu
 
@@ -30,7 +26,6 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 3. Có thể chia các tin tuyển thành những nhóm công việc nào dựa trên kỹ năng và nội dung mô tả? Những kỹ năng nào thường được yêu cầu cùng nhau?
 4. Với những tin có lương số hợp lệ, có thể dự đoán **khoảng lương** từ cấp bậc, kinh nghiệm, địa điểm và kỹ năng không?
 
-**Bài toán phân lớp dự kiến:** `salary_band` theo lương tháng quy đổi VND. Với tin có đủ `Luong_Min` và `Luong_Max`, dùng **trung điểm** `(Luong_Min + Luong_Max) / 2` để gán nhãn: dưới 15 triệu; từ 15 đến 30 triệu (gồm hai mốc); trên 30 triệu. Loại khỏi bài toán phân lớp những tin chỉ có một cận lương, “thỏa thuận”, thiếu đơn vị/kỳ trả hoặc không quy đổi tin cậy được; vẫn giữ chúng trong dữ liệu gốc và thống kê tỷ lệ bị loại. Không đưa các trường lương hoặc thông tin suy ra trực tiếp từ lương vào đặc trưng đầu vào. Nhóm dự kiến so sánh Decision Tree đã cắt tỉa với một mô hình đối chứng và báo cáo ma trận nhầm lẫn, Precision, Recall, Macro F1. Nếu số mẫu có lương không đủ, nhóm sẽ ghi rõ hạn chế và điều chỉnh bài toán công khai trong README và báo cáo, không suy diễn từ mẫu thiếu.
 
 Đây là **câu hỏi và thiết kế dự kiến**, chưa phải kết luận về thị trường lao động Việt Nam.
 
@@ -73,12 +68,12 @@ Hiếu: làm sạch mô tả, trích xuất kỹ năng → data/clean_data.csv
     ↓
 Linh: EDA, phân lớp · Hiếu: gom cụm, luật kết hợp
     ↓
-Cả nhóm: ghép notebook và kiểm tra chéo · Khoa: báo cáo · Linh và Hiếu: slide
+Cả nhóm: ghép notebook và kiểm tra chéo 
+    ↓
+Khoa: báo cáo
+    ↓
+Linh và Hiếu: slide
 ```
-
-`data/raw/` giữ CSV riêng theo website. `data/raw_data.csv` là **bản thô đã gộp**, có thể đã được ánh xạ cột và bỏ tin trùng nhưng chưa làm sạch giá trị gốc. Tên `raw_data.csv` được giữ để khớp sản phẩm nộp trong đề bài; các bước tiếp theo dùng tên riêng để tránh nhầm với dữ liệu nguyên bản theo nguồn.
-
-`schema.json` dự kiến quy định tên cột chung, kiểu dữ liệu, trường bắt buộc và giá trị thiếu hợp lệ. Các trường cần có gồm tiêu đề, công ty, địa điểm, lương gốc, kinh nghiệm, mô tả công việc, yêu cầu/quyền lợi, `URL_Goc` và `Timestamp`. `validate_schema.py` sẽ kiểm tra ba CSV theo nguồn, thống kê tin hợp lệ/không hợp lệ và xuất log lỗi để sửa crawler trước khi gộp. `common/base_scraper.py` là khung Playwright dùng chung. **Các quy tắc này chỉ có hiệu lực khi code thật sự gọi bước ánh xạ và kiểm tra.**
 
 ### Bảng pipeline dự kiến
 
@@ -99,12 +94,6 @@ Tên script xử lý và định dạng log là **giao diện dự kiến**; nh�
 | `data/raw_data.csv` | Bản gộp ba nguồn sau kiểm tra schema và xử lý trùng. |
 | `data/normalized_data.csv` | Bản sau chuẩn hóa lương, địa điểm, kinh nghiệm. |
 | `data/clean_data.csv` | Bản sau xử lý mô tả và trích xuất kỹ năng để phân tích. |
-
-### Snapshot để tái lập kết quả
-
-Website tuyển dụng thay đổi liên tục nên chạy lại crawler vào ngày khác **không tạo đúng cùng tập tin**. Khi chốt dữ liệu, nhóm sẽ lưu bản snapshot cố định của ba CSV nguồn, `raw_data.csv`, `normalized_data.csv` và `clean_data.csv` trong gói nộp (nếu quyền chia sẻ cho phép), kèm ngày/giờ thu thập, số dòng và **SHA-256 của từng tệp**. Ghi danh sách mã băm trong `data/manifest.sha256` hoặc bảng tương đương. Notebook phân tích sẽ đọc snapshot `clean_data.csv` để tái tạo kết quả **không cần cào lại**; chạy crawler chỉ phục vụ kiểm tra khả năng thu thập và sẽ tạo dữ liệu mới.
-
-**Quy ước đặt tên:** script và thư mục dùng `snake_case`. Tên cột phải khớp chính xác với `schema.json` ở cả ba nguồn; giữ các tên đề bài dùng để đối chiếu như `URL_Goc`, `Timestamp`, `Luong_Min` và `Luong_Max`. Từ điển cột chi tiết, mã hóa UTF-8, múi giờ timestamp, định dạng ngày và quy tắc số thiếu: [Chốt trong schema trước khi chạy ba nguồn].
 
 ## 6. Phương pháp phân tích dự kiến
 
@@ -230,8 +219,6 @@ Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** 
 | 20/11 | Hoàn thiện slide PDF/PowerPoint và kịch bản 10–12 phút | Lưu Đức Linh; Trần Minh Hiếu | Chưa làm |
 | 21/11 | Rà soát tệp, nộp đủ sản phẩm trên LMS | Cả nhóm | Chưa làm |
 
-Trạng thái trong bảng là ảnh chụp kế hoạch được cung cấp ngày 12/11/2026, **không tự cập nhật theo thời gian**. Sau mỗi phần việc, người phụ trách cần ghi số tin trước/sau kiểm tra, lỗi và cách khắc phục, thời điểm chạy và trạng thái mới. Nếu đến gần hạn cào chưa đạt 800 tin, nhóm sẽ kiểm tra lỗi crawler, mở rộng từ khóa **trong phạm vi đã định nghĩa** hoặc tăng số trang/nguồn phù hợp. Nhóm không nhân bản bản ghi để đạt chỉ tiêu; nếu vẫn thiếu, ghi rõ số lượng thực tế và tác động tới kết luận.
-
 ### Quy trình cộng tác
 
 Theo bảng phân công, mỗi thành viên làm trên nhánh Git riêng và tạo Pull Request để nhóm review trước khi gộp vào nhánh chính. Sau mỗi phần việc, nhóm đồng bộ tiến độ và kiểm tra chéo. Mọi thành viên cần giải thích được mã nguồn, thuật toán và số liệu khi vấn đáp; tỷ lệ đóng góp thực tế sẽ được xác nhận trong báo cáo.
@@ -247,6 +234,3 @@ Dữ liệu chỉ đến từ ba nền tảng và một khoảng thu thập ng�
 - [Tài liệu phương pháp làm sạch, gom cụm, luật kết hợp và phân lớp — bổ sung khi triển khai].
 - Khung trình bày dữ liệu và khả năng tái lập tham khảo [Social Science Data Editors](https://github.com/social-science-data-editors/template_README).
 
-**Giấy phép mã nguồn và quyền chia sẻ dữ liệu:** [Chốt và bổ sung trước khi công bố].
-
-**Liên hệ nhóm:** [Bổ sung địa chỉ liên hệ chung hoặc người đại diện khi nộp].
