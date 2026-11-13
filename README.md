@@ -52,7 +52,7 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 | TopCV | Trần Đăng Khoa | `crawlers/scrape_topcv.py` | `data/raw/raw_topcv.csv` |
 | VietnamWorks | Trần Minh Hiếu | `crawlers/scrape_vietnamworks.py` | `data/raw/raw_vietnamworks.csv` |
 
-**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Bảng phân công chọn **Playwright** cho khung crawler chung để xử lý trang tải động và phân trang; đây là quyết định thiết kế, chưa xác nhận `requirements.txt` và ba script đã hoạt động. Nhóm sẽ kiểm thử khả năng truy cập từng nguồn trước khi chọn cách cào cuối cùng. Mỗi bản ghi cần giữ văn bản gốc, `URL_Goc`, `Timestamp` và tên nguồn để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
+**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Khung `BaseCrawler` thống nhất đầu ra; từng crawler nguồn tự chọn Playwright hoặc HTTP/API, cách phân trang và lấy nội dung chi tiết. Chưa có ba script nguồn trên nhánh này nên chưa xác nhận khả năng cào thực tế. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và tên nguồn để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
 
 ### Thu thập có trách nhiệm
 
@@ -87,13 +87,13 @@ Linh và Hiếu: slide
 | Bước | Script / notebook | Đầu vào | Đầu ra |
 | --- | --- | --- | --- |
 | Thu thập | `crawlers/scrape_*.py` | URL tìm kiếm và bộ lọc từng nguồn | `data/raw/raw_*.csv` |
-| Kiểm tra cấu trúc | `validate_schema.py` | Ba CSV nguồn, `schema.json` | Báo cáo số dòng hợp lệ và log lỗi |
-| Gộp và khử trùng | `merge_raw.py` | CSV đã kiểm tra | `data/raw_data.csv` |
+| Kiểm tra cấu trúc | `crawlers/schema_utils.py`: `load_raw`, `check_row` | Ba CSV nguồn, `schema.json` | Số dòng hợp lệ/không hợp lệ khi gộp |
+| Gộp và khử trùng | `crawlers/schema_utils.py`: `merge_raw` | Ba CSV nguồn | `data/raw_data.csv` |
 | Chuẩn hóa | `normalize_data.py` | `data/raw_data.csv` | `data/normalized_data.csv` |
 | Làm sạch văn bản | `clean_data.py` | `data/normalized_data.csv` | `data/clean_data.csv` |
 | Khai phá dữ liệu | `notebooks/NhomTamTau_MiningPipeline.ipynb` | `data/clean_data.csv` | Bảng, biểu đồ và mô hình trong báo cáo |
 
-Tên script xử lý và định dạng log là **giao diện dự kiến**; nhóm sẽ sửa bảng này theo file và lệnh chạy thực tế.
+Các script nguồn và bước chuẩn hóa/làm sạch vẫn là **dự kiến**; `schema_utils.py` đã có nhưng chưa chạy trên CSV cào thật.
 
 | Tệp dữ liệu dự kiến | Vai trò |
 | --- | --- |
@@ -127,11 +127,14 @@ schema.json
 crawlers/
   __init__.py
   base_crawler.py
+  schema_utils.py
+  http_client.py
   scrape_itviec.py
   scrape_topcv.py
   scrape_vietnamworks.py
-validate_schema.py
-merge_raw.py
+tests/
+  __init__.py
+  test_base_crawler.py
 normalize_data.py
 clean_data.py
 data/
@@ -147,7 +150,7 @@ reports/NhomTamTau_BaoCao_BaiTapLon.pdf
 reports/NhomTamTau_Slide_BaoCao.pdf
 ```
 
-Đây là **cấu trúc đích**, chưa phải danh sách tệp hiện có. `crawlers/base_crawler.py` cung cấp `BaseCrawler` và `SearchTask`: mỗi crawler đặt `SOURCE`, khai báo các trang tìm kiếm trong `iter_search_tasks()`, lấy URL tin qua `extract_job_urls()` và trả các trường gốc theo `schema.json` trong `parse_job()`. Gọi `crawl(max_jobs=5)` để chạy thử hoặc `crawl()` để xuất CSV riêng cho nguồn. `crawlers/__init__.py` giúp import các lớp này như một package; đây không phải bước xử lý dữ liệu cần chạy trước khi chuẩn hóa. `.gitignore` cần loại trừ `.venv/`, cache, hồ sơ trình duyệt và tệp chứa khóa; việc đưa CSV lên kho mã phụ thuộc quyền chia sẻ dữ liệu và dung lượng.
+Đây là **cấu trúc đích**; các file `scrape_*.py` và bước xử lý sau cào vẫn chưa có. `crawlers/base_crawler.py` cung cấp `BaseCrawler`: mỗi crawler đặt `SOURCE` và triển khai `iter_jobs(max_pages=...)` để trả bản ghi theo `schema.json`. Base giữ giá trị gốc, gắn `Timestamp`, ghi CSV và tách file partial nếu lần cào dừng hoặc CSV chính đang mở; `schema_utils.py` đọc, kiểm tra và gộp CSV, còn `http_client.py` là tiện ích tùy chọn cho crawler dùng HTTP. `tests/test_base_crawler.py` kiểm tra khung bằng dữ liệu giả. `.gitignore` loại trừ file tạm và thư mục `data/`; CSV cần đưa vào gói nộp riêng sau khi kiểm tra quyền chia sẻ.
 
 ## 8. Tải, cài đặt và chạy lại
 
@@ -180,7 +183,7 @@ python -m pip install -r requirements.txt
 
 ### Chạy pipeline
 
-**Lệnh đã kiểm thử theo thứ tự:** cào từng nguồn → kiểm tra schema → gộp dữ liệu → chuẩn hóa → làm sạch → chạy notebook: [Bổ sung lệnh, đối số, thời gian chạy và tệp đầu ra của từng bước theo bảng pipeline]. Nhóm sẽ thêm chế độ chạy thử ít tin để giảng viên kiểm tra crawler tại lớp mà không cần cào lại toàn bộ. Nếu chỉ cần tái tạo phân tích, dùng snapshot `data/clean_data.csv` thay vì chạy crawler.
+**Thứ tự dự kiến:** cào từng nguồn → kiểm tra và gộp bằng `merge_raw` trong `crawlers/schema_utils.py` → chuẩn hóa → làm sạch → chạy notebook. Khung và hàm gộp đã được kiểm thử bằng dữ liệu giả; lệnh cào từng nguồn và toàn bộ pipeline cần bổ sung sau khi có script nguồn. Có thể gọi `crawl(max_jobs=5)` để thử ít tin; nếu chỉ tái tạo phân tích, dùng snapshot `data/clean_data.csv` thay vì cào lại.
 
 ### Đối chiếu kết quả
 
@@ -199,7 +202,7 @@ python -m pip install -r requirements.txt
 
 | Sản phẩm theo đề bài | Đường dẫn dự kiến |
 | --- | --- |
-| Mã nguồn crawler và hướng dẫn chạy | `crawlers/`, `common/`, README này |
+| Mã nguồn crawler và hướng dẫn chạy | `crawlers/`, README này |
 | Danh sách thư viện | `requirements.txt` |
 | Dữ liệu thô và sạch | `data/raw_data.csv`, `data/clean_data.csv` |
 | Notebook KDD | `notebooks/NhomTamTau_MiningPipeline.ipynb` |
@@ -215,7 +218,7 @@ Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** 
 | 12/11 | Chọn nguồn, từ khóa và thống nhất cấu trúc dữ liệu | Cả nhóm | Đã làm |
 | 12/11 | README hướng dẫn chạy và bảng tiến độ; `requirements.txt`; `schema.json`; `crawlers/base_crawler.py` | Lưu Đức Linh | Đang làm |
 | 16/11 | Cào và kiểm tra mẫu ITviec, TopCV, VietnamWorks; lưu `URL_Goc` và `Timestamp` | Linh; Khoa; Hiếu theo bảng nguồn | Chưa làm |
-| 17/11 | `validate_schema.py`: thống kê dòng hợp lệ/lỗi theo nguồn và xuất log | Trần Đăng Khoa | Chưa làm |
+| 17/11 | Kiểm tra và gộp CSV nguồn bằng `crawlers/schema_utils.py`; thống kê dòng hợp lệ/lỗi | Trần Đăng Khoa | Chưa chạy trên CSV thật |
 | 17/11 | Gộp ba nguồn, khử trùng và tạo `raw_data.csv` | Cả nhóm; Khoa phụ trách công cụ và thống kê gộp | Chưa làm |
 | 18/11 | Chuẩn hóa lương, địa điểm, kinh nghiệm | Trần Đăng Khoa | Chưa làm |
 | 18/11 | Làm sạch văn bản và trích xuất kỹ năng; ghép thành `clean_data.csv` | Trần Minh Hiếu, phối hợp Khoa | Chưa làm |
