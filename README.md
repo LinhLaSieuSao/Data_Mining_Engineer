@@ -142,7 +142,6 @@ data/
   raw_data.csv
   normalized_data.csv
   clean_data.csv
-  manifest.sha256
 notebooks/NhomTamTau_MiningPipeline.ipynb
 reports/NhomTamTau_BaoCao_BaiTapLon.pdf
 reports/NhomTamTau_Slide_BaoCao.pdf
@@ -185,7 +184,7 @@ python -m pip install -r requirements.txt
 
 ### Đối chiếu kết quả
 
-**Số bản ghi theo từng bước, số tin lỗi/trùng và ví dụ kiểm tra `URL_Goc`:** [Bổ sung sau khi chạy]. Kiểm tra mã SHA-256 của snapshot trước khi chạy notebook (PowerShell: `Get-FileHash -Algorithm SHA256 data/clean_data.csv`; macOS/Linux: `sha256sum data/clean_data.csv`) và đối chiếu với `data/manifest.sha256`. Notebook cuối cùng cần chạy từ đầu đến cuối trên snapshot `clean_data.csv`.
+**Số bản ghi theo từng bước, số tin lỗi/trùng và ví dụ kiểm tra `URL_Goc`:** [Bổ sung sau khi chạy]. Notebook cuối cùng cần chạy từ đầu đến cuối trên snapshot `clean_data.csv`.
 
 ## 9. Kết quả và sản phẩm nộp
 
