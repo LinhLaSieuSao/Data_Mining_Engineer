@@ -1,5 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "x-version": "1.1.0",
+  "x-schema-note": "Chỉ sửa schema qua Pull Request và báo cả nhóm; ô CSV rỗng tương đương null.",
+  "x-column-order": "Thứ tự cột CSV theo mảng required.",
+  "x-tracked-fields": [
+    "Ma_Tin_Nguon", "URL_Goc", "URL_Tim_Kiem", "Tu_Khoa_Tim_Kiem",
+    "Tieu_De", "Cong_Ty", "Dia_Diem_Goc", "Luong_Goc", "Kinh_Nghiem_Goc",
+    "Mo_Ta_Cong_Viec_Goc", "Yeu_Cau_Goc", "Quyen_Loi_Goc", "Ky_Nang_Goc"
+  ],
   "title": "Khung dữ liệu tuyển dụng cho ITviec, TopCV và VietnamWorks",
   "type": "object",
   "additionalProperties": false,
@@ -32,7 +40,7 @@
     },
     "Ma_Tin_Nguon": {
       "type": ["string", "null"],
-      "description": "ID tin do nền tảng cung cấp, giữ nguyên dưới dạng chuỗi; null nếu không có."
+      "description": "ID tin do nền tảng cung cấp, luôn lưu dạng chuỗi; null nếu không có."
     },
     "URL_Goc": {
       "type": "string",
@@ -54,9 +62,8 @@
       "description": "Thời điểm crawler lấy tin, ISO 8601 có múi giờ, ví dụ 2026-11-13T09:30:00+07:00. Không phải ngày đăng tin."
     },
     "Tieu_De": {
-      "type": "string",
-      "pattern": "\\S",
-      "description": "Tiêu đề tin như được hiển thị trên nguồn; bắt buộc có nội dung."
+      "type": ["string", "null"],
+      "description": "Tiêu đề nguyên văn; null nếu website không hiển thị hoặc crawler chưa lấy được."
     },
     "Cong_Ty": {
       "type": ["string", "null"],
@@ -104,7 +111,7 @@
     },
     "Ky_Nang_Goc": {
       "type": ["string", "null"],
-      "description": "Danh sách kỹ năng/tag nguyên văn do website hiển thị; chưa suy ra từ mô tả."
+      "description": "Mảng thẻ kỹ năng dạng chuỗi JSON; mỗi thẻ giữ đúng như website hiển thị; null nếu không có."
     }
   }
 }

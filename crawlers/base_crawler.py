@@ -1,31 +1,30 @@
+"""Khung chung để các crawler nguồn xuất dữ liệu tuyển dụng thô."""
+
 from __future__ import annotations
 
 import csv
 import json
-import logging
-import os
 import random
-import re
 import tempfile
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import ClassVar, Iterable, Mapping
-from urllib.parse import urljoin, urlsplit
-
-from playwright.sync_api import Page, sync_playwright
+from urllib.parse import urlsplit
+from .schema_utils import coerce, load_schema
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = PROJECT_ROOT / "schema.json"
+VN_TIMEZONE = timezone(timedelta(hours=7))
 
 
-@dataclass(frozen=True)
-class SearchTask:
-    url: str
-    keyword: str | None = None
+def _print_status(message: str) -> None:
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        print(message.encode("ascii", "backslashreplace").decode("ascii"))
 
 
 @dataclass(frozen=True)
@@ -34,180 +33,180 @@ class CrawlResult:
     output_path: Path
     saved: int
     skipped: int
+    missing: dict[str, int] = field(default_factory=dict)
+    error: str | None = None
+    status: str = "ok"
+    duplicates: int = 0
 
 
 class BaseCrawler(ABC):
+    """Crawler nguồn chỉ cần đặt SOURCE và triển khai iter_jobs()."""
+
     SOURCE: ClassVar[str] = ""
 
-    def __init__(
-        self,
-        *,
-        headless: bool = True,
-        min_delay: float = 2.0,
-        max_delay: float = 4.0,
-        timeout_ms: int = 30_000,
-        user_agent: str = "DataMiningEngineerAcademicCrawler/1.0",
-    ) -> None:
+    def __init__(self, *, min_delay: float = 2.0, max_delay: float = 4.0) -> None:
+        schema = load_schema()
+        self.columns = tuple(schema["required"])
+        self.tracked = tuple(schema["x-tracked-fields"])
+        if not {"Nguon", "Timestamp", "URL_Goc"} <= set(self.columns):
+            raise ValueError("Schema thiếu cột Nguon, Timestamp hoặc URL_Goc")
+        if not set(self.tracked) <= set(self.columns):
+            raise ValueError("Schema có cột theo dõi không thuộc required")
+        if self.SOURCE not in schema["properties"]["Nguon"]["enum"]:
+            raise ValueError(f"Nguồn không có trong schema.json: {self.SOURCE}")
         if min_delay < 0 or max_delay < min_delay:
-            raise ValueError("Cần 0 <= min_delay <= max_delay")
-        if timeout_ms <= 0:
-            raise ValueError("timeout_ms phải lớn hơn 0")
-
-        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-        self.columns: tuple[str, ...] = tuple(schema["required"])
-        self.properties: dict = schema["properties"]
-        sources = self.properties["Nguon"]["enum"]
-        if self.SOURCE not in sources:
-            raise ValueError(f"SOURCE phải là một trong {sources}")
-        if set(self.columns) != set(self.properties):
-            raise ValueError("required và properties trong schema.json không khớp")
-
-        self.headless = headless
-        self.min_delay = min_delay
-        self.max_delay = max_delay
-        self.timeout_ms = timeout_ms
-        self.user_agent = user_agent
-        self.logger = logging.getLogger(f"crawler.{self.SOURCE}")
-        self._last_navigation: float | None = None
+            raise ValueError("Khoảng chờ không hợp lệ")
+        self.min_delay, self.max_delay = min_delay, max_delay
+        self._warned_unknown = False
 
     @abstractmethod
-    def iter_search_tasks(self) -> Iterable[SearchTask]:
-        """Yield SearchTask cho từng trang/từ khóa; xử lý phân trang tại đây."""
+    def iter_jobs(self, *, max_pages: int | None = None) -> Iterable[Mapping[str, object]]:
+        """Tự phân trang/đọc HTML hoặc API; yield tin dùng tên cột trong schema.json.
 
-    @abstractmethod
-    def extract_job_urls(self, page: Page, task: SearchTask) -> Iterable[str]:
-        """Trả URL tin từ trang kết quả; có thể cuộn trang trước khi trích xuất."""
+        Giá trị giữ nguyên như nguồn. Có thể để thiếu cột; base sẽ điền ô trống.
+        Mỗi tin nên có URL_Goc, URL_Tim_Kiem và Tu_Khoa_Tim_Kiem nếu lấy được.
+        """
 
-    @abstractmethod
-    def parse_job(self, page: Page, task: SearchTask) -> Mapping[str, str | None]:
-        """Trả các cột gốc theo schema.json, ít nhất phải có Tieu_De."""
+    def pause(self) -> None:
+        """Crawler nguồn gọi giữa các lần truy cập, không gọi cho từng hàng CSV."""
+        time.sleep(random.uniform(self.min_delay, self.max_delay))
 
-    def visit(self, page: Page, url: str) -> None:
-        parsed = urlsplit(url)
-        if parsed.scheme not in ("http", "https") or not parsed.netloc:
-            raise ValueError(f"URL không hợp lệ: {url!r}")
-        if self._last_navigation is not None:
-            delay = random.uniform(self.min_delay, self.max_delay)
-            remaining = delay - (time.monotonic() - self._last_navigation)
-            if remaining > 0:
-                time.sleep(remaining)
-        self._last_navigation = time.monotonic()
-        response = page.goto(url, wait_until="domcontentloaded", timeout=self.timeout_ms)
-        if response is not None and response.status >= 400:
-            raise RuntimeError(f"HTTP {response.status} khi tải {url}")
-
-    def make_record(
-        self, raw_fields: Mapping[str, str | None], task: SearchTask, job_url: str
-    ) -> dict[str, str | None]:
-        reserved = {"Nguon", "URL_Goc", "URL_Tim_Kiem", "Tu_Khoa_Tim_Kiem", "Timestamp"}
-        unknown = set(raw_fields) - set(self.columns)
-        forbidden = set(raw_fields) & reserved
-        if unknown or forbidden:
-            raise ValueError(f"Cột lạ: {sorted(unknown)}; cột do lớp nền quản lý: {sorted(forbidden)}")
-
-        record: dict[str, str | None] = {column: None for column in self.columns}
-        record.update(raw_fields)
-        record.update(
-            Nguon=self.SOURCE,
-            URL_Goc=job_url,
-            URL_Tim_Kiem=task.url,
-            Tu_Khoa_Tim_Kiem=task.keyword,
-            Timestamp=datetime.now().astimezone().isoformat(timespec="seconds"),
-        )
-        self.validate_record(record)
+    def prepare_record(self, job: Mapping[str, object]) -> dict[str, object | None]:
+        """Ánh xạ cấu trúc, không chuẩn hóa giá trị từ website."""
+        unknown = set(job) - set(self.columns)
+        if unknown and not self._warned_unknown:
+            _print_status(f"[{self.SOURCE}] Khóa ngoài schema bị bỏ qua: {sorted(unknown)}")
+            self._warned_unknown = True
+        record = {name: coerce(job.get(name)) for name in self.columns}
+        record["Nguon"] = self.SOURCE
+        record["Timestamp"] = datetime.now(VN_TIMEZONE).isoformat(timespec="seconds")
         return record
 
-    def validate_record(self, record: Mapping[str, str | None]) -> None:
-        if set(record) != set(self.columns):
-            raise ValueError("Bản ghi thiếu hoặc thừa cột so với schema.json")
-        for name, rule in self.properties.items():
-            value = record[name]
-            accepted_types = rule["type"]
-            if isinstance(accepted_types, str):
-                accepted_types = [accepted_types]
-            if value is None:
-                if "null" not in accepted_types:
-                    raise ValueError(f"{name} không được để trống")
-                continue
-            if "string" not in accepted_types or not isinstance(value, str):
-                raise ValueError(f"{name} phải là chuỗi hoặc null")
-            if "enum" in rule and value not in rule["enum"]:
-                raise ValueError(f"{name} không thuộc tập giá trị cho phép")
-            if "pattern" in rule and not re.search(rule["pattern"], value):
-                raise ValueError(f"{name} không đúng mẫu yêu cầu")
-            if rule.get("format") == "uri":
-                parsed = urlsplit(value)
-                if parsed.scheme not in ("http", "https") or not parsed.netloc:
-                    raise ValueError(f"{name} phải là URL HTTP(S)")
-            if rule.get("format") == "date-time":
-                try:
-                    timestamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
-                except ValueError as exc:
-                    raise ValueError(f"{name} phải là thời điểm ISO 8601") from exc
-                if timestamp.utcoffset() is None:
-                    raise ValueError(f"{name} phải có múi giờ")
+    @staticmethod
+    def is_readable_record(record: Mapping[str, object | None]) -> bool:
+        """Chỉ bỏ hàng không thể mở URL tin để đối chiếu với website."""
+        url = record.get("URL_Goc")
+        if not isinstance(url, str):
+            return False
+        try:
+            parts = urlsplit(url)
+        except ValueError:
+            return False
+        return parts.scheme in ("http", "https") and bool(parts.netloc)
 
-    def crawl(self, *, max_jobs: int | None = None, output_path: Path | None = None) -> CrawlResult:
-        """Chạy crawler và xuất CSV theo thứ tự cột trong schema.json."""
-        if max_jobs is not None and max_jobs <= 0:
-            raise ValueError("max_jobs phải lớn hơn 0")
-        destination = Path(output_path) if output_path else PROJECT_ROOT / "data" / "raw" / f"raw_{self.SOURCE}.csv"
-        seen_urls: set[str] = set()
-        rows: list[dict[str, str | None]] = []
-        skipped = 0
-        self._last_navigation = None
+    def crawl(
+        self, *, max_jobs: int | None = None, max_pages: int | None = None,
+        output_path: Path | None = None,
+    ) -> CrawlResult:
+        """Thu dữ liệu raw; lỗi một hàng không làm mất các hàng đã đọc được."""
+        destination = Path(output_path) if output_path else (
+            PROJECT_ROOT / "data" / "raw" / f"raw_{self.SOURCE}.csv"
+        )
+        if (max_jobs is not None and max_jobs <= 0) or (max_pages is not None and max_pages <= 0):
+            _print_status("Giới hạn số trang/tin phải lớn hơn 0")
+            return CrawlResult(self.SOURCE, destination, 0, 0, error="Giới hạn không hợp lệ", status="failed")
 
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=self.headless)
-            context = browser.new_context(user_agent=self.user_agent, locale="vi-VN")
-            listing_page = context.new_page()
-            detail_page = context.new_page()
-            try:
-                for task in self.iter_search_tasks():
-                    if not isinstance(task, SearchTask):
-                        raise TypeError("iter_search_tasks phải trả SearchTask")
-                    self.visit(listing_page, task.url)
-                    for href in self.extract_job_urls(listing_page, task):
-                        job_url = urljoin(listing_page.url, href)
-                        if job_url in seen_urls:
-                            continue
-                        seen_urls.add(job_url)
-                        try:
-                            self.visit(detail_page, job_url)
-                            fields = self.parse_job(detail_page, task)
-                            record = self.make_record(fields, task, detail_page.url)
-                        except Exception:
-                            skipped += 1
-                            self.logger.exception("Bỏ qua tin lỗi: %s", job_url)
-                            continue
-                        rows.append(record)
-                        if max_jobs is not None and len(rows) >= max_jobs:
-                            break
+        rows: list[dict[str, object | None]] = []
+        missing = {name: 0 for name in self.tracked}
+        skipped = duplicates = 0
+        seen = set()
+        error = None
+        status = "ok"
+        iterator = None
+        checkpoint = Path(f"{destination}.partial.jsonl")
+        stamp = datetime.now(VN_TIMEZONE).strftime("%Y%m%d_%H%M%S")
+        try:
+            checkpoint.parent.mkdir(parents=True, exist_ok=True)
+            with checkpoint.open("x", encoding="utf-8") as progress:
+                iterator = iter(self.iter_jobs(max_pages=max_pages))
+                for job in iterator:
+                    if not isinstance(job, Mapping):
+                        skipped += 1
+                        continue
+                    record = self.prepare_record(job)
+                    if not self.is_readable_record(record):
+                        skipped += 1
+                        continue
+                    url = urlsplit(record["URL_Goc"])
+                    key = ((self.SOURCE, record["Ma_Tin_Nguon"])
+                           if record["Ma_Tin_Nguon"] else (url.netloc.lower(), url.path.rstrip("/")))
+                    if key in seen:
+                        duplicates += 1
+                        continue
+                    progress.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+                    progress.flush()
+                    seen.add(key)
+                    rows.append(record)
+                    for name in missing:
+                        if record[name] is None:
+                            missing[name] += 1
+                    if len(rows) % 25 == 0:
+                        _print_status(f"[{self.SOURCE}] Đã đọc {len(rows)} tin")
                     if max_jobs is not None and len(rows) >= max_jobs:
                         break
-            finally:
-                context.close()
-                browser.close()
+        except KeyboardInterrupt:
+            error = "Đã dừng bằng bàn phím"
+            status = "partial"
+        except Exception as exc:
+            error = f"Dừng khi đọc nguồn: {type(exc).__name__}: {exc}"
+            status = "partial" if rows else "failed"
+        finally:
+            if iterator is not None and callable(close := getattr(iterator, "close", None)):
+                try:
+                    close()
+                except Exception:
+                    pass
 
-        if not rows:
-            raise RuntimeError(f"Không có tin hợp lệ từ {self.SOURCE}; không ghi đè CSV cũ")
-        self._write_csv(destination, rows)
-        self.logger.info("Đã lưu %d tin, bỏ qua %d tin: %s", len(rows), skipped, destination)
-        return CrawlResult(self.SOURCE, destination, len(rows), skipped)
+        partial = destination.with_name(f"{destination.stem}_partial_{stamp}{destination.suffix}")
+        output = destination if status == "ok" else partial
+        written = False
+        if rows:
+            try:
+                self.write_csv(output, rows)
+                written = True
+            except Exception as exc:
+                error = f"Không thay được CSV: {type(exc).__name__}: {exc}"
+                status = "partial"
+                output = partial
+                try:
+                    with output.open("x", encoding="utf-8-sig", newline="") as handle:
+                        writer = csv.DictWriter(handle, fieldnames=self.columns)
+                        writer.writeheader()
+                        writer.writerows(rows)
+                    written = True
+                except Exception as backup_exc:
+                    status = "failed"
+                    error += f"; file dự phòng lỗi: {backup_exc}"
+        elif error is None:
+            error, status = "Không có tin đọc được; giữ CSV cũ", "failed"
 
-    def _write_csv(self, destination: Path, rows: list[dict[str, str | None]]) -> None:
+        if status == "ok" and written:
+            checkpoint.unlink()
+        saved = len(rows) if written else 0
+        result = CrawlResult(self.SOURCE, output, saved, skipped, missing, error, status, duplicates)
+        message = (f"[{self.SOURCE}] {status}: lưu={saved}, bỏ qua={skipped}, trùng={duplicates}; thiếu: "
+                   + ", ".join(f"{name}={count}" for name, count in missing.items())
+                   + f"; file: {output}")
+        _print_status(message)
+        if error:
+            _print_status(f"[{self.SOURCE}] {error}")
+        if checkpoint.exists():
+            _print_status(f"[{self.SOURCE}] Checkpoint: {checkpoint}")
+        return result
+
+    def write_csv(self, destination: Path, rows: list[dict[str, object | None]]) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        temp_name: str | None = None
+        temp_name = None
         try:
             with tempfile.NamedTemporaryFile(
-                mode="w", encoding="utf-8", newline="", dir=destination.parent,
+                mode="w", encoding="utf-8-sig", newline="", dir=destination.parent,
                 prefix=f".{destination.name}.", suffix=".tmp", delete=False,
             ) as handle:
                 temp_name = handle.name
                 writer = csv.DictWriter(handle, fieldnames=self.columns)
                 writer.writeheader()
                 writer.writerows(rows)
-            os.replace(temp_name, destination)
+            Path(temp_name).replace(destination)
         finally:
-            if temp_name is not None and os.path.exists(temp_name):
-                os.unlink(temp_name)
+            if temp_name and Path(temp_name).exists():
+                Path(temp_name).unlink()
