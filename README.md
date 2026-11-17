@@ -7,7 +7,7 @@
 [![mlxtend 0.23.4+](https://img.shields.io/badge/mlxtend-0.23.4%2B-6A5ACD)](requirements.txt)
 ![Project status: planning](https://img.shields.io/badge/status-planning-yellow)
 
-**Nội Dung:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
+**Nội dung:** [Mục tiêu](#2-mục-tiêu-và-câu-hỏi-nghiên-cứu) · [Nguồn dữ liệu](#4-nguồn-và-cách-thu-thập) · [Pipeline](#5-quy-trình-xử-lý-và-schema) · [Tải và chạy](#8-tải-cài-đặt-và-chạy-lại) · [Sản phẩm](#9-kết-quả-và-sản-phẩm-nộp) · [Tiến độ](#10-tiến-độ-và-phương-án-dự-phòng).
 
 ## 1. Giới thiệu
 
@@ -18,9 +18,9 @@
 | Nhóm | Tam Tấu |
 | Thành viên | Lưu Đức Linh; Trần Đăng Khoa; Trần Minh Hiếu |
 | Lớp | DH24DS01 |
-| Thời gian thu thập dự kiến | 12–16/11/2026 |
-| Hạn hoàn thiện và nộp dự kiến | Hoàn thiện báo cáo/slide 20/11; nộp trên LMS 21/11/2026 |
-| Nguồn dự kiến | ITviec, TopCV, VietnamWorks |
+| Thời gian thu thập dự kiến | Hạn hoàn thành các công cụ cào theo bảng phân công: 20/11/2026; thời gian cào thực tế sẽ bổ sung sau |
+| Hạn hoàn thiện và nộp dự kiến | Hoàn thiện báo cáo và slide 25/11; nộp 26/11/2026 theo bảng phân công |
+| Nguồn dự kiến | ITviec, TopCV, VietnamWorks, LinkedIn, TopDev |
 
 Mục tiêu thu thập theo đề bài là khoảng **800–1.500+ tin tuyển dụng thô**. Số tin thực tế, tỷ lệ thiếu dữ liệu và kết quả phân tích sẽ chỉ được ghi sau khi chạy và kiểm tra.
 
@@ -38,9 +38,10 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 
 ## 3. Phạm vi và định nghĩa dữ liệu
 
-- **Tin thuộc phạm vi:** vị trí Data Science, Data Analytics, AI, Machine Learning và các vị trí CNTT liên quan có nhiệm vụ/kỹ năng công nghệ rõ ràng. Bộ từ khóa gồm tên vị trí và kỹ năng cốt lõi; các ví dụ trong bảng phân công là Python, SQL, Power BI, PyTorch và Spark. Danh sách tìm kiếm chính thức, nhóm vị trí được nhận/loại và cách xử lý tin mơ hồ: [Ghi lại bộ lọc đã chốt].
-- **Khoảng thu thập:** 12–16/11/2026; thời điểm đăng tin trên website có thể khác thời điểm crawler thu thập.
-- **Tin trùng:** trước tiên nhận diện cùng URL sau khi bỏ tham số theo dõi và dấu `/` cuối. Tin có cùng tên công ty, tiêu đề và địa điểm sẽ được đánh dấu để kiểm tra; **không tự động xóa tin khác URL hoặc khác nguồn** khi chưa xác minh là cùng một vị trí.
+- **Tin thuộc phạm vi:** bộ lọc tiêu đề trong `keyword.json` nhận năm nhóm Data Analyst (DA), Data Scientist (DS), Data Engineer (DE), AI Engineer (AI) và Backend Developer (BE). Giữ Backend để đối chiếu với các vị trí dữ liệu khi phân tích. Cụm từ được so khớp sau khi bỏ dấu và không phân biệt hoa thường; từ viết tắt được so khớp nguyên từ, có phân biệt hoa thường trên tiêu đề gốc. Nhóm AI chỉ khớp các cụm chức danh AI Engineer, không khớp từ AI đứng riêng. Lọc theo tiêu đề có thể bỏ sót tin có tên chung chung.
+- **Tìm kiếm theo kỹ năng:** crawler từng nguồn dự kiến đưa các kỹ năng như Python, SQL, Power BI hoặc Spark vào truy vấn tìm kiếm phù hợp với website; phần này chưa được triển khai. `keyword.json` chỉ lọc nhóm vị trí theo tiêu đề.
+- **Khoảng thu thập:** bảng phân công đặt hạn hoàn thành các công cụ cào là 20/11/2026; khoảng thời gian thu thập thực tế sẽ ghi sau khi chạy. Thời điểm đăng tin trên website có thể khác thời điểm crawler thu thập.
+- **Tin trùng:** `khoa_url()` tạo khóa đối chiếu từ host và đường dẫn, bỏ toàn bộ query và dấu `/` cuối; URL gốc vẫn được lưu. Nếu website dùng query chứa mã tin, crawler nguồn phải tự xử lý trước khi dùng khóa này. Tin có cùng tên công ty, tiêu đề và địa điểm sẽ được đánh dấu để kiểm tra; **không tự động xóa tin khác URL hoặc khác nguồn** khi chưa xác minh là cùng một vị trí.
 - **Lương hợp lệ cho phân tích số:** có đơn vị tiền và kỳ trả lương xác định được. “Thỏa thuận”, khoảng không rõ đơn vị hoặc giá trị không chuyển đổi tin cậy được giữ trong cột gốc nhưng để thiếu ở cột lương số.
 - **Tính đại diện:** mẫu là các tin tìm được theo nguồn, từ khóa và thời gian đã chọn; không mặc nhiên đại diện cho toàn bộ thị trường CNTT Việt Nam.
 
@@ -51,19 +52,34 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 | ITviec | Lưu Đức Linh | `crawlers/scrape_itviec.py` | `data/raw/raw_itviec.csv` |
 | TopCV | Trần Đăng Khoa | `crawlers/scrape_topcv.py` | `data/raw/raw_topcv.csv` |
 | VietnamWorks | Trần Minh Hiếu | `crawlers/scrape_vietnamworks.py` | `data/raw/raw_vietnamworks.csv` |
+| LinkedIn | Trần Minh Hiếu | `crawlers/scrape_Linkedin.py` | `data/raw/raw_Linkedin.csv` |
+| TopDev | Trần Đăng Khoa | `crawlers/scrape_topdev.py` | `data/raw/raw_topdev.csv` |
 
-**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Khung `BaseCrawler` thống nhất đầu ra; từng crawler nguồn tự chọn Playwright hoặc HTTP/API, cách phân trang và lấy nội dung chi tiết. Chưa có ba script nguồn trên nhánh này nên chưa xác nhận khả năng cào thực tế. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và tên nguồn để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
+**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Các hàm trong `crawlers/base_crawler.py` hỗ trợ kiểm tra robots, thử lại, đối chiếu URL và đọc/ghi CSV theo schema; `crawlers/loc_keyword.py` lọc nhóm vị trí theo tiêu đề. Từng crawler nguồn tự chọn Playwright hoặc HTTP/API, cách phân trang và lấy nội dung chi tiết. Chưa có các script nguồn nên chưa xác nhận khả năng cào thực tế. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và tên nguồn để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
+
+Bảng phân công liệt kê năm nguồn cần phát triển, nhưng mục kiểm tra và gộp trong cùng tài liệu vẫn ghi ba nguồn; nhóm cần xác nhận những nguồn sẽ đưa vào bộ dữ liệu cuối.
 
 ### Thu thập có trách nhiệm
 
 Trước khi chạy từng crawler, nhóm sẽ kiểm tra `robots.txt` và điều khoản của website đó, ghi lại quyết định sử dụng dữ liệu trong mục nguồn tham khảo. Crawler cần dùng tốc độ truy cập hợp lý, thời gian chờ giữa các yêu cầu và User-Agent có thể nhận diện; không vượt cơ chế đăng nhập hoặc kiểm soát truy cập. Nhóm không thu thập thông tin cá nhân của ứng viên và không đưa cookie, tài khoản hoặc khóa truy cập vào repository. Dữ liệu chỉ phục vụ đồ án học thuật; quyền chia sẻ từng tệp sẽ được xác nhận trước khi công bố.
+
+`kiem_thu_robot()` trả `(rp, "")` khi các URL mục tiêu được phép; nếu không, hàm trả `(None, ly_do)` và crawler phải dừng, đồng thời có thể hiển thị lý do. Thông báo phân biệt robots không tồn tại (404), đường dẫn bị cấm, lỗi mạng và các mã HTTP khác. Nhóm chủ động dừng khi gặp 404 theo chính sách thận trọng; RFC 9309 cho phép crawler tiếp tục trong trường hợp này.
+
+```python
+rp, ly_do = kiem_thu_robot(trang_chu, cac_url_muc_tieu, ten_bot)
+if rp is None:
+    print(ly_do)  # Dừng thu thập; đọc thông báo để biết nguyên nhân.
+else:
+    # Chỉ tiếp tục thu thập khi các URL mục tiêu được phép.
+    pass
+```
 
 ## 5. Quy trình xử lý và schema
 
 ```text
 Cả nhóm: chốt README, requirements.txt, schema.json và khung crawler
     ↓
-ITviec / TopCV / VietnamWorks → 3 CSV nguồn trong data/raw/
+Các nguồn tuyển dụng theo bảng phân công → CSV nguồn trong data/raw/
     ↓
 Ánh xạ cột theo nguồn → kiểm tra schema → cả nhóm gộp và khử trùng
     ↓
@@ -87,18 +103,18 @@ Linh và Hiếu: slide
 | Bước | Script / notebook | Đầu vào | Đầu ra |
 | --- | --- | --- | --- |
 | Thu thập | `crawlers/scrape_*.py` | URL tìm kiếm và bộ lọc từng nguồn | `data/raw/raw_*.csv` |
-| Kiểm tra cấu trúc | `crawlers/schema_utils.py`: `load_raw`, `check_row` | Ba CSV nguồn, `schema.json` | Số dòng hợp lệ/không hợp lệ khi gộp |
-| Gộp và khử trùng | `crawlers/schema_utils.py`: `merge_raw` | Ba CSV nguồn | `data/raw_data.csv` |
+| Kiểm tra và ghi CSV nguồn | `crawlers/base_crawler.py`: `doc_csv`, `xuat_csv` | Dữ liệu nguồn, `schema.json` | CSV có header đúng thứ tự và các cột không cho phép null có giá trị |
+| Gộp và khử trùng | Công cụ gộp dự kiến | Các CSV nguồn được chọn | `data/raw_data.csv` |
 | Chuẩn hóa | `normalize_data.py` | `data/raw_data.csv` | `data/normalized_data.csv` |
 | Làm sạch văn bản | `clean_data.py` | `data/normalized_data.csv` | `data/clean_data.csv` |
 | Khai phá dữ liệu | `notebooks/NhomTamTau_MiningPipeline.ipynb` | `data/clean_data.csv` | Bảng, biểu đồ và mô hình trong báo cáo |
 
-Các script nguồn và bước chuẩn hóa/làm sạch vẫn là **dự kiến**; `schema_utils.py` đã có nhưng chưa chạy trên CSV cào thật.
+Các script nguồn, công cụ gộp và bước chuẩn hóa/làm sạch vẫn là **dự kiến**. Bộ công cụ chung đã được kiểm thử bằng dữ liệu giả, chưa chạy trên CSV cào thật.
 
 | Tệp dữ liệu dự kiến | Vai trò |
 | --- | --- |
-| `data/raw/raw_itviec.csv`, `raw_topcv.csv`, `raw_vietnamworks.csv` | Tin gốc theo từng nguồn, giữ `URL_Goc` và `Timestamp`. |
-| `data/raw_data.csv` | Bản gộp ba nguồn sau kiểm tra schema và xử lý trùng. |
+| `data/raw/raw_*.csv` | Tin gốc theo từng nguồn, giữ `URL_Goc` và `Timestamp`. |
+| `data/raw_data.csv` | Bản gộp các nguồn được chọn sau kiểm tra schema và xử lý trùng. |
 | `data/normalized_data.csv` | Bản sau chuẩn hóa lương, địa điểm, kinh nghiệm. |
 | `data/clean_data.csv` | Bản sau xử lý mô tả và trích xuất kỹ năng để phân tích. |
 
@@ -123,34 +139,21 @@ Ngưỡng cuối cùng, số cụm, mô hình đối chứng, cách chia tập v
 README.md
 requirements.txt
 schema.json
+keyword.json
 .gitignore
 crawlers/
   __init__.py
   base_crawler.py
-  schema_utils.py
-  http_client.py
-  scrape_itviec.py
-  scrape_topcv.py
-  scrape_vietnamworks.py
+  loc_keyword.py
 tests/
-  __init__.py
   test_base_crawler.py
-normalize_data.py
-clean_data.py
 data/
-  raw/
-    raw_itviec.csv
-    raw_topcv.csv
-    raw_vietnamworks.csv
-  raw_data.csv
-  normalized_data.csv
-  clean_data.csv
-notebooks/NhomTamTau_MiningPipeline.ipynb
-reports/NhomTamTau_BaoCao_BaiTapLon.pdf
-reports/NhomTamTau_Slide_BaoCao.pdf
+  raw_data/
 ```
 
-Đây là **cấu trúc đích**; các file `scrape_*.py` và bước xử lý sau cào vẫn chưa có. `crawlers/base_crawler.py` cung cấp `BaseCrawler`: mỗi crawler đặt `SOURCE` và triển khai `iter_jobs(max_pages=...)` để trả bản ghi theo `schema.json`. Base giữ giá trị gốc, gắn `Timestamp`, ghi CSV và tách file partial nếu lần cào dừng hoặc CSV chính đang mở; `schema_utils.py` đọc, kiểm tra và gộp CSV, còn `http_client.py` là tiện ích tùy chọn cho crawler dùng HTTP. `tests/test_base_crawler.py` kiểm tra khung bằng dữ liệu giả. `.gitignore` loại trừ file tạm và thư mục `data/`; CSV cần đưa vào gói nộp riêng sau khi kiểm tra quyền chia sẻ.
+Đây là **cấu trúc hiện có**. `crawlers/__init__.py` xuất các hàm dùng chung; `crawlers/base_crawler.py` cung cấp các hàm xử lý robots, thời gian, URL, retry và CSV; `crawlers/loc_keyword.py` đọc `keyword.json` để lọc tiêu đề. Crawler nguồn tự tạo `Timestamp` trước khi tải chi tiết, quản lý danh sách tin và gọi `xuat_csv()` để lưu checkpoint. Bộ kiểm thử dùng các module trong `crawlers/`.
+
+`tests/test_base_crawler.py` kiểm tra các hàm bằng dữ liệu giả. Các file `scrape_*.py`, công cụ gộp, bước xử lý sau cào, notebook và báo cáo vẫn là dự kiến. `.gitignore` loại trừ file tạm và thư mục `data/`; CSV cần đưa vào gói nộp riêng sau khi kiểm tra quyền chia sẻ.
 
 ## 8. Tải, cài đặt và chạy lại
 
@@ -183,7 +186,15 @@ python -m pip install -r requirements.txt
 
 ### Chạy pipeline
 
-**Thứ tự dự kiến:** cào từng nguồn → kiểm tra và gộp bằng `merge_raw` trong `crawlers/schema_utils.py` → chuẩn hóa → làm sạch → chạy notebook. Khung và hàm gộp đã được kiểm thử bằng dữ liệu giả; lệnh cào từng nguồn và toàn bộ pipeline cần bổ sung sau khi có script nguồn. Có thể gọi `crawl(max_jobs=5)` để thử ít tin; nếu chỉ tái tạo phân tích, dùng snapshot `data/clean_data.csv` thay vì cào lại.
+**Thứ tự dự kiến:** cào từng nguồn → kiểm tra và gộp CSV → chuẩn hóa → làm sạch → chạy notebook. Lệnh cào từng nguồn, công cụ gộp và toàn bộ pipeline cần bổ sung sau khi được triển khai; nếu chỉ tái tạo phân tích, dùng snapshot `data/clean_data.csv` thay vì cào lại.
+
+Chạy kiểm thử bộ công cụ chung từ thư mục gốc repository:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Các kiểm thử dùng dữ liệu giả, mô phỏng robots và không gửi request thật.
 
 ### Đối chiếu kết quả
 
@@ -215,19 +226,25 @@ Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** 
 
 | Hạn theo bảng phân công | Công việc | Phụ trách | Trạng thái trong bảng |
 | --- | --- | --- | --- |
-| 12/11 | Chọn nguồn, từ khóa và thống nhất cấu trúc dữ liệu | Cả nhóm | Đã làm |
-| 12/11 | README hướng dẫn chạy và bảng tiến độ; `requirements.txt`; `schema.json`; `crawlers/base_crawler.py` | Lưu Đức Linh | Đang làm |
-| 16/11 | Cào và kiểm tra mẫu ITviec, TopCV, VietnamWorks; lưu `URL_Goc` và `Timestamp` | Linh; Khoa; Hiếu theo bảng nguồn | Chưa làm |
-| 17/11 | Kiểm tra và gộp CSV nguồn bằng `crawlers/schema_utils.py`; thống kê dòng hợp lệ/lỗi | Trần Đăng Khoa | Chưa chạy trên CSV thật |
-| 17/11 | Gộp ba nguồn, khử trùng và tạo `raw_data.csv` | Cả nhóm; Khoa phụ trách công cụ và thống kê gộp | Chưa làm |
-| 18/11 | Chuẩn hóa lương, địa điểm, kinh nghiệm | Trần Đăng Khoa | Chưa làm |
-| 18/11 | Làm sạch văn bản và trích xuất kỹ năng; ghép thành `clean_data.csv` | Trần Minh Hiếu, phối hợp Khoa | Chưa làm |
-| 19/11 | EDA và biểu đồ; phân lớp và đánh giá | Lưu Đức Linh | Chưa làm |
-| 19/11 | Gom cụm và luật kết hợp | Trần Minh Hiếu | Chưa làm |
-| 19/11 | Ghép notebook KDD, chạy từ đầu đến cuối và kiểm tra chéo | Cả nhóm | Chưa làm |
-| 20/11 | Hoàn thiện báo cáo PDF | Trần Đăng Khoa, nhận kết quả từ cả nhóm | Chưa làm |
-| 20/11 | Hoàn thiện slide PDF/PowerPoint và kịch bản 10–12 phút | Lưu Đức Linh; Trần Minh Hiếu | Chưa làm |
-| 21/11 | Rà soát tệp, nộp đủ sản phẩm trên LMS | Cả nhóm | Chưa làm |
+| 12/11/2026 | Chọn nguồn, từ khóa và thống nhất cấu trúc dữ liệu | Cả nhóm | Đã làm |
+| 12/11/2026 | README hướng dẫn chạy và bảng tiến độ; `schema.json` | Lưu Đức Linh | Đã làm |
+| 12/11/2026 | `requirements.txt` | Trần Đăng Khoa | Đã làm |
+| 17/11/2026 | Khung cào dùng chung | Lưu Đức Linh | Đang làm |
+| 20/11/2026 | Cào ITviec | Lưu Đức Linh | Đang làm |
+| 20/11/2026 | Cào TopCV và TopDev | Trần Đăng Khoa | Đang làm |
+| 20/11/2026 | Cào VietnamWorks và LinkedIn | Trần Minh Hiếu | Đang làm |
+| 21/11/2026 | Kiểm tra dữ liệu thô theo schema; thống kê dòng hợp lệ/lỗi | Trần Đăng Khoa | Chưa làm |
+| 21/11/2026 | Gộp ba nguồn, đối soát và khử trùng để tạo `raw_data.csv` | Trần Đăng Khoa | Đã làm theo bảng; chưa đối chiếu sản phẩm |
+| 22/11/2026 | Chuẩn hóa lương, địa điểm, kinh nghiệm | Trần Đăng Khoa | Chưa làm |
+| 22/11/2026 | Làm sạch văn bản và trích xuất kỹ năng; ghép thành `clean_data.csv` | Trần Minh Hiếu, phối hợp Khoa | Chưa làm |
+| 23/11/2026 | EDA và biểu đồ; phân lớp và đánh giá | Lưu Đức Linh | Chưa làm |
+| 23/11/2026 | Gom cụm và luật kết hợp | Trần Minh Hiếu | Chưa làm |
+| 24/11/2026 | Ghép notebook KDD và kiểm tra chéo | Cả nhóm | Chưa làm |
+| 25/11/2026 | Hoàn thiện báo cáo PDF | Trần Đăng Khoa | Chưa làm |
+| 25/11/2026 | Hoàn thiện slide PDF/PowerPoint | Lưu Đức Linh; Trần Minh Hiếu | Chưa làm |
+| 26/11/2026 | Rà soát, nộp mã nguồn, dữ liệu, notebook, báo cáo và slide | Cả nhóm | Chưa làm |
+
+Trạng thái được ghi theo bảng phân công trong PDF, chưa xác nhận tiến độ thực tế. Bảng đặt hạn báo cáo/slide là 25/11 và hạn nộp là 26/11, nhưng phần yêu cầu chi tiết ở cuối PDF vẫn ghi lần lượt 20/11 và 21/11; nhóm cần xác nhận hạn chính thức với giảng viên.
 
 ### Quy trình cộng tác
 
@@ -235,7 +252,9 @@ Theo bảng phân công, mỗi thành viên làm trên nhánh Git riêng và t�
 
 ## 11. Hạn chế dự kiến
 
-Dữ liệu chỉ đến từ ba nền tảng và một khoảng thu thập ngắn; thuật toán hiển thị, bộ lọc và chính sách của từng website có thể tạo thiên lệch mẫu. Một tin có thể xuất hiện ở nhiều nguồn; nhiều tin không công bố lương hoặc chỉ ghi “thỏa thuận”. Kết quả phân tích vì vậy cần ghi rõ mẫu số, tỷ lệ thiếu, quy tắc khử trùng và phạm vi suy luận. Hạn chế thực tế sẽ được cập nhật sau khi có dữ liệu.
+Dự án dự kiến thu thập từ năm nền tảng: ITviec, TopCV, VietnamWorks, LinkedIn và TopDev. Dù có nhiều nguồn, dữ liệu vẫn chỉ phản ánh các tin tìm được trong khoảng thời gian và phạm vi tìm kiếm của nhóm, không đại diện cho toàn bộ thị trường tuyển dụng CNTT Việt Nam.
+
+Mỗi website có thuật toán hiển thị, bộ lọc, chính sách truy cập và cấu trúc dữ liệu khác nhau, nên số lượng và chất lượng tin thu được có thể chênh lệch. Một tin có thể xuất hiện trên nhiều website; nhiều tin không công bố lương hoặc chỉ ghi “thỏa thuận”. Kết quả phân tích cần ghi rõ số tin theo từng nguồn, tỷ lệ thiếu và quy tắc khử trùng. Những hạn chế thực tế sẽ được cập nhật sau khi thu thập và kiểm tra dữ liệu.
 
 ## 12. Tài liệu tham khảo và giấy phép
 
