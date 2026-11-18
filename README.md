@@ -78,6 +78,8 @@ else:
 
 ## 5. Quy trình xử lý và schema
 
+`schema.json` phiên bản 3.0.0 quy định mỗi bản ghi thô có tiêu đề công việc (`Tieu_De`), tên công ty (`Ten_Cong_Ty`), địa điểm (`Dia_Diem`), lương gốc chưa chuẩn hóa (`Luong`), kinh nghiệm (`Kinh_Nghiem`) và toàn văn JD (`Mo_Ta_Cong_Viec`). Nếu tin có mục yêu cầu hoặc quyền lợi riêng, lưu thêm nguyên văn vào `Yeu_Cau_Chi_Tiet` và `Quyen_Loi`; để trống khi nguồn không có mục tương ứng. Giữ thứ tự, tiêu đề mục và ký tự xuống dòng trong các khối văn bản; không xóa nội dung đã tách khỏi toàn văn JD. `Ten_Cong_Ty` là cột bắt buộc, còn các trường không được nguồn công bố như lương hoặc kinh nghiệm có thể để trống. CSV theo schema cũ cần bổ sung các cột mới trước khi đọc hoặc gộp với CSV phiên bản 3.0.0.
+
 ```text
 Cả nhóm: chốt README, requirements.txt, schema.json và khung crawler
     ↓

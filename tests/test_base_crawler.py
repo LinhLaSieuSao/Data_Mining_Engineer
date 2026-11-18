@@ -54,8 +54,11 @@ class KiemThuBase(unittest.TestCase):
         self.dong = {
             "Web": "topcv", "URL_Goc": "https://example.com/job/1?ref=abc",
             "Timestamp": crawlers.danh_dau_bat_dau(), "Tieu_De": "Data Analyst",
+            "Ten_Cong_Ty": "Công ty Ví dụ",
             "Dia_Diem": "Hà Nội",
             "Mo_Ta_Cong_Viec": '  Mô tả, "Python"\nDòng mới  ',
+            "Yeu_Cau_Chi_Tiet": "Yêu cầu\n- Python, SQL",
+            "Quyen_Loi": "Quyền lợi\n- Bảo hiểm, thưởng",
         }
 
     def test_robots_va_host(self):
@@ -126,6 +129,8 @@ class KiemThuBase(unittest.TestCase):
             self.assertEqual(csv.DictReader(tep).fieldnames, self.schema["required"])
         dong = crawlers.doc_csv(self.duong_dan)[0]
         self.assertEqual(dong["Mo_Ta_Cong_Viec"], self.dong["Mo_Ta_Cong_Viec"])
+        for cot in ("Ten_Cong_Ty", "Yeu_Cau_Chi_Tiet", "Quyen_Loi"):
+            self.assertEqual(dong[cot], self.dong[cot])
         self.assertEqual(dong["URL_Goc"], self.dong["URL_Goc"])
         self.assertEqual(json.loads(dong["Ky_Nang"]), ["Python", "SQL"])
         self.assertIsNone(dong["Luong"])
@@ -134,6 +139,8 @@ class KiemThuBase(unittest.TestCase):
             in_canh_bao.assert_not_called()
         with self.assertRaisesRegex(ValueError, "Dòng 1.*Tieu_De"):
             crawlers.xuat_csv(self.duong_dan, [dict(self.dong, Tieu_De="  ")])
+        with self.assertRaisesRegex(ValueError, "Dòng 1.*Ten_Cong_Ty"):
+            crawlers.xuat_csv(self.duong_dan, [dict(self.dong, Ten_Cong_Ty="  ")])
 
     def test_csv_an_toan_khi_loi(self):
         self.duong_dan.write_bytes(b"wrong,header\n1,2\n")
