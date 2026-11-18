@@ -1,0 +1,39 @@
+{
+  "Nhom_Nghanh": [
+    "Data Analyst",
+    "Data Scientist",
+    "Data Engineer",
+    "AI Engineer",
+    "Database Administrator"
+  ],
+  "Ki_Nang": [
+    "SQL",
+    "Power BI",
+    "Python",
+    "Excel",
+    "Tableau",
+    "Looker Studio",
+    "scikit-learn",
+    "PyTorch",
+    "TensorFlow",
+    "Pandas",
+    "NumPy",
+    "Spark",
+    "Airflow",
+    "AWS",
+    "Airbyte",
+    "PySpark",
+    "LangChain",
+    "RAG",
+    "OpenCV",
+    "FastAPI",
+    "PostgreSQL",
+    "Oracle Database",
+    "Microsoft SQL Server",
+    "MySQL",
+    "MongoDB",
+    "PL/SQL",
+    "Backup/Restore",
+    "Replication"
+  ]
+}
