@@ -38,10 +38,12 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 
 ## 3. Phạm vi và định nghĩa dữ liệu
 
-- **Tin thuộc phạm vi:** bộ lọc tiêu đề trong `keyword.json` nhận năm nhóm Data Analyst (DA), Data Scientist (DS), Data Engineer (DE), AI Engineer (AI) và Backend Developer (BE). Giữ Backend để đối chiếu với các vị trí dữ liệu khi phân tích. Cụm từ được so khớp sau khi bỏ dấu và không phân biệt hoa thường; từ viết tắt được so khớp nguyên từ, có phân biệt hoa thường trên tiêu đề gốc. Nhóm AI chỉ khớp các cụm chức danh AI Engineer, không khớp từ AI đứng riêng. Lọc theo tiêu đề có thể bỏ sót tin có tên chung chung.
-- **Tìm kiếm theo kỹ năng:** crawler từng nguồn dự kiến đưa các kỹ năng như Python, SQL, Power BI hoặc Spark vào truy vấn tìm kiếm phù hợp với website; phần này chưa được triển khai. `keyword.json` chỉ lọc nhóm vị trí theo tiêu đề.
+- **Tin thuộc phạm vi:** `keyword.json` có mảng `Nhom_Nghanh` gồm Data Analyst, Data Scientist, Data Engineer, AI Engineer và Database Administrator. Đây là các cụm tìm kiếm cho từng crawler nguồn; chưa có crawler nguồn thực tế.
+- **Kỹ năng chuyên ngành:** mảng `Ki_Nang` là một danh sách kỹ năng chung cho năm ngành, không chia theo ngành và không chứa kỹ năng mềm. Mỗi crawler nguồn chọn từ khóa phù hợp khi tìm tin; danh sách này không biểu thị tần suất tuyển dụng.
 - **Khoảng thu thập:** bảng phân công đặt hạn hoàn thành các công cụ cào là 20/11/2026; khoảng thời gian thu thập thực tế sẽ ghi sau khi chạy. Thời điểm đăng tin trên website có thể khác thời điểm crawler thu thập.
-- **Tin trùng:** `khoa_url()` tạo khóa đối chiếu từ host và đường dẫn, bỏ toàn bộ query và dấu `/` cuối; URL gốc vẫn được lưu. Nếu website dùng query chứa mã tin, crawler nguồn phải tự xử lý trước khi dùng khóa này. Tin có cùng tên công ty, tiêu đề và địa điểm sẽ được đánh dấu để kiểm tra; **không tự động xóa tin khác URL hoặc khác nguồn** khi chưa xác minh là cùng một vị trí.
+- **Tin trùng:** `khoa_url()` tạo khóa đối chiếu từ host và đường dẫn, bỏ toàn bộ query và dấu `/` cuối; URL gốc vẫn được lưu. Nếu website dùng query chứa mã tin, crawler nguồn phải tự xử lý trước khi dùng khóa này. **Không tự động xóa tin khác URL hoặc khác nguồn** khi chưa xác minh là cùng một vị trí.
+
+**Nguồn đối chiếu khung kỹ năng:** Các danh sách trong `keyword.json` là khung kỹ thuật dựa trên tin tuyển dụng tham khảo, không phải thống kê tần suất thị trường. DA: [TopCV Data Analyst](https://www.topcv.vn/viec-lam/data-analyst/2335015.html), [ITviec Data Analyst](https://itviec.com/it-jobs/data-analysis); DS: [TopCV Data Scientist](https://www.topcv.vn/viec-lam/data-scientist-lead/2312435.html); DE: [TopCV Data Engineer](https://www.topcv.vn/viec-lam/data-engineer-thu-nhap-tu-18-40-trieu/2237775.html?ta_source=JobSearchList_LinkDetail&u_sr_id=8SffGhsqCAmkOUVUE6se7IcA26NzmrAWNsc6yE2A_1786554497), [ITviec Data Engineer](https://itviec.com/it-jobs/data-engineer); AI: [TopCV AI Engineer](https://www.topcv.vn/viec-lam/lap-trinh-vien-ai-ai-engineer-kinh-nghiem-tu-2-nam-thu-nhap-hap-dan-tu-16-25-trieu-ha-noi-di-lam-nga/2151205.html), [ITviec AI Engineer](https://itviec.com/it-jobs/ai-engineer-middle-senior-saigon-technology-2800); DBA: [TopCV Database Administrator](https://www.topcv.vn/viec-lam/quan-tri-co-so-du-lieu-database-administrator/2058506.html?ta_source=JobSearchList_LinkDetail&u_sr_id=iYpCn8onDwObjpnUMIm5nZ9h2lcHIgKsDtvIFTAZ_1788282005), [ITviec Database Expert](https://itviec.com/it-jobs/database-expert-elca-2418). Các ví dụ Python, SQL, PowerBI, PyTorch, Spark cũng có trong đề bài môn học.
 - **Lương hợp lệ cho phân tích số:** có đơn vị tiền và kỳ trả lương xác định được. “Thỏa thuận”, khoảng không rõ đơn vị hoặc giá trị không chuyển đổi tin cậy được giữ trong cột gốc nhưng để thiếu ở cột lương số.
 - **Tính đại diện:** mẫu là các tin tìm được theo nguồn, từ khóa và thời gian đã chọn; không mặc nhiên đại diện cho toàn bộ thị trường CNTT Việt Nam.
 
@@ -55,7 +57,7 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 | LinkedIn | Trần Minh Hiếu | `crawlers/scrape_Linkedin.py` | `data/raw/raw_Linkedin.csv` |
 | TopDev | Trần Đăng Khoa | `crawlers/scrape_topdev.py` | `data/raw/raw_topdev.csv` |
 
-**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Các hàm trong `crawlers/base_crawler.py` hỗ trợ kiểm tra robots, thử lại, đối chiếu URL và đọc/ghi CSV theo schema; `crawlers/loc_keyword.py` lọc nhóm vị trí theo tiêu đề. Từng crawler nguồn tự chọn Playwright hoặc HTTP/API, cách phân trang và lấy nội dung chi tiết. Chưa có các script nguồn nên chưa xác nhận khả năng cào thực tế. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và tên nguồn để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
+**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Các hàm trong `crawlers/base_crawler.py` hỗ trợ kiểm tra robots, thử lại, đối chiếu URL và đọc/ghi CSV theo schema. Từng crawler nguồn dùng `Nhom_Nghanh` và `Ki_Nang` trong `keyword.json`, tự quyết định từ khóa tìm kiếm và cách lọc tin cho website đó. Chưa có các script nguồn nên chưa xác nhận khả năng cào thực tế. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và `Web` để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
 
 Bảng phân công liệt kê năm nguồn cần phát triển, nhưng mục kiểm tra và gộp trong cùng tài liệu vẫn ghi ba nguồn; nhóm cần xác nhận những nguồn sẽ đưa vào bộ dữ liệu cuối.
 
@@ -123,7 +125,7 @@ Các script nguồn, công cụ gộp và bước chuẩn hóa/làm sạch vẫn
 | Bước | Phương pháp và quyết định cần kiểm chứng |
 | --- | --- |
 | Làm sạch | Khoa dùng quy tắc/Regex cho lương dạng khoảng, “up to”, USD và “thỏa thuận”; tách `Luong_Min`/`Luong_Max`, quy đổi đơn vị, chuẩn hóa địa điểm (Hà Nội, TP.HCM, Đà Nẵng, Remote) và số năm kinh nghiệm; giữ cột gốc để truy xuất. |
-| Văn bản và kỹ năng | Hiếu bỏ HTML và stop words Việt/Anh, lập từ điển kỹ năng theo nhóm ngôn ngữ lập trình, framework, cloud, database và kỹ năng mềm; tạo mảng kỹ năng hoặc ma trận nhị phân, kiểm tra thủ công một mẫu tin. |
+| Văn bản và kỹ năng | Hiếu bỏ HTML và stop words Việt/Anh, dùng từ điển kỹ năng chuyên ngành theo ngôn ngữ lập trình, framework, cloud và database; tạo mảng kỹ năng hoặc ma trận nhị phân, kiểm tra thủ công một mẫu tin. |
 | EDA | Linh thống kê lương theo Fresher/Junior/Middle/Senior/Lead, Top 15 kỹ năng và so sánh nhu cầu/lương giữa Hà Nội, TP.HCM, Đà Nẵng; ghi mẫu số và tỷ lệ thiếu trong biểu đồ. |
 | Gom cụm | Mã hóa kỹ năng/nội dung tin; thử K-Means hoặc Hierarchical Clustering; chọn số cụm bằng Elbow và Silhouette, rồi diễn giải đặc điểm từng cụm. |
 | Luật kết hợp | Tạo tập kỹ năng cho mỗi tin, thử Apriori hoặc FP-Growth; công bố ngưỡng Support và Confidence đã chọn, lọc theo Lift > 1,2 và kiểm tra Conviction. |
@@ -144,16 +146,15 @@ keyword.json
 crawlers/
   __init__.py
   base_crawler.py
-  loc_keyword.py
 tests/
   test_base_crawler.py
 data/
   raw_data/
 ```
 
-Đây là **cấu trúc hiện có**. `crawlers/__init__.py` xuất các hàm dùng chung; `crawlers/base_crawler.py` cung cấp các hàm xử lý robots, thời gian, URL, retry và CSV; `crawlers/loc_keyword.py` đọc `keyword.json` để lọc tiêu đề. Crawler nguồn tự tạo `Timestamp` trước khi tải chi tiết, quản lý danh sách tin và gọi `xuat_csv()` để lưu checkpoint. Bộ kiểm thử dùng các module trong `crawlers/`.
+Đây là **cấu trúc hiện có**. `crawlers/__init__.py` xuất các hàm dùng chung; `crawlers/base_crawler.py` cung cấp các hàm xử lý robots, thời gian, URL, retry và CSV. `keyword.json` chỉ là hai danh sách từ khóa; các crawler nguồn sẽ đọc và áp dụng chúng theo cách tìm kiếm của từng website. Crawler nguồn tự tạo `Timestamp` trước khi tải chi tiết, quản lý danh sách tin và gọi `xuat_csv()` để lưu checkpoint.
 
-`tests/test_base_crawler.py` kiểm tra các hàm bằng dữ liệu giả. Các file `scrape_*.py`, công cụ gộp, bước xử lý sau cào, notebook và báo cáo vẫn là dự kiến. `.gitignore` loại trừ file tạm và thư mục `data/`; CSV cần đưa vào gói nộp riêng sau khi kiểm tra quyền chia sẻ.
+`tests/test_base_crawler.py` kiểm tra các hàm dùng chung bằng dữ liệu giả. Các file `scrape_*.py`, công cụ gộp, bước xử lý sau cào, notebook và báo cáo vẫn là dự kiến. `.gitignore` loại trừ file tạm và thư mục `data/`; CSV cần đưa vào gói nộp riêng sau khi kiểm tra quyền chia sẻ.
 
 ## 8. Tải, cài đặt và chạy lại
 

@@ -1,31 +1,39 @@
 {
-  "x-version": "1.0.0",
-  "x-note": "Chỉ cào tin thuộc 5 nhóm này; sửa qua Pull Request và báo cả nhóm. cum_tu: khớp nguyên cụm từ sau khi bỏ dấu, không phân biệt hoa thường. viet_tat: khớp nguyên từ VIẾT HOA trong tiêu đề gốc, có phân biệt hoa thường. Nhóm AI khớp cụm từ chỉ vị trí AI Engineer, không khớp từ AI đứng riêng; BE là mã và viết tắt của Backend Developer, dùng để đối chiếu với nhóm dữ liệu.",
-  "nhom": {
-    "DA": {
-      "ten": "Data Analyst",
-      "cum_tu": ["data analyst", "data analytics", "data analysis", "business data analyst", "business intelligence analyst", "bi analyst", "reporting analyst", "phân tích dữ liệu"],
-      "viet_tat": ["DA"]
-    },
-    "DS": {
-      "ten": "Data Scientist",
-      "cum_tu": ["data scientist", "data science", "khoa học dữ liệu", "nhà khoa học dữ liệu"],
-      "viet_tat": ["DS"]
-    },
-    "DE": {
-      "ten": "Data Engineer",
-      "cum_tu": ["data engineer", "data engineering", "etl developer", "etl engineer", "data pipeline engineer", "data platform engineer", "data warehouse engineer", "data warehouse developer", "kỹ sư dữ liệu"],
-      "viet_tat": ["DE"]
-    },
-    "AI": {
-      "ten": "AI Engineer",
-      "cum_tu": ["ai engineer", "ai engineering", "artificial intelligence engineer", "artificial intelligence engineering", "kỹ sư trí tuệ nhân tạo"],
-      "viet_tat": []
-    },
-    "BE": {
-      "ten": "Backend Developer",
-      "cum_tu": ["backend", "back end"],
-      "viet_tat": ["BE"]
-    }
-  }
+  "Nhom_Nghanh": [
+    "Data Analyst",
+    "Data Scientist",
+    "Data Engineer",
+    "AI Engineer",
+    "Database Administrator"
+  ],
+  "Ki_Nang": [
+    "SQL",
+    "Power BI",
+    "Python",
+    "Excel",
+    "Tableau",
+    "Looker Studio",
+    "scikit-learn",
+    "PyTorch",
+    "TensorFlow",
+    "Pandas",
+    "NumPy",
+    "Spark",
+    "Airflow",
+    "AWS",
+    "Airbyte",
+    "PySpark",
+    "LangChain",
+    "RAG",
+    "OpenCV",
+    "FastAPI",
+    "PostgreSQL",
+    "Oracle Database",
+    "Microsoft SQL Server",
+    "MySQL",
+    "MongoDB",
+    "PL/SQL",
+    "Backup/Restore",
+    "Replication"
+  ]
 }

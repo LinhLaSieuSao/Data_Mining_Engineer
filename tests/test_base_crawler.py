@@ -12,7 +12,6 @@ from unittest.mock import Mock, patch
 from urllib.robotparser import RobotFileParser
 
 import crawlers
-from crawlers import loc_keyword
 
 
 class PhanHoiGia:
@@ -30,49 +29,20 @@ class PhanHoiGia:
         return self.noi_dung
 
 
-class KiemThuKeyword(unittest.TestCase):
-    def test_khop_tieu_de(self):
-        cac_truong_hop = [
-            ("Senior Data Analyst (SQL/Power BI)", ["DA"]),
-            ("Chuyên viên Phân tích dữ liệu", ["DA"]),
-            ("Junior DA", ["DA"]),
-            ("Kỹ sư Dữ liệu", ["DE"]),
-            ("AI Engineer", ["AI"]),
-            ("AI Engineering", ["AI"]),
-            ("Artificial Intelligence Engineer", ["AI"]),
-            ("Kỹ sư Trí tuệ nhân tạo", ["AI"]),
-            ("Analytics Engineer", []),
-            ("AI Product Manager", []),
-            ("AI", []),
-            ("Senior Backend Developer (Java)", ["BE"]),
-            ("Back-end Engineer", ["BE"]),
-            ("BE Developer", ["BE"]),
-            ("Senior AE", []),
-            ("AE Account Executive", []),
-            ("Data Analyst / Data Engineer", ["DA", "DE"]),
-            ("Nhân viên đa năng", []),
-            ("Database Administrator", []),
-            ("Data Entry Operator", []),
-            ("Frontend Developer", []),
-            ("Nhân viên kinh doanh", []),
-            ("", []), (None, []), (123, []),
-        ]
-        for tieu_de, mong_doi in cac_truong_hop:
-            with self.subTest(tieu_de=tieu_de):
-                self.assertEqual(crawlers.khop_nhom(tieu_de), mong_doi)
-                self.assertIs(crawlers.la_tin_muc_tieu(tieu_de), bool(mong_doi))
-        self.assertEqual(crawlers.chuan_van_ban("Kỹ sư Dữ liệu"), "ky su du lieu")
-        self.assertEqual(list(crawlers.doc_keyword()["nhom"]), ["DA", "DS", "DE", "AI", "BE"])
-
-    def test_file_keyword_khong_doc_duoc(self):
-        loc_keyword.doc_keyword.cache_clear()
-        self.addCleanup(loc_keyword.doc_keyword.cache_clear)
-        with TemporaryDirectory() as thu_muc, patch.object(loc_keyword, "THU_MUC_GOC", Path(thu_muc)):
-            with self.assertRaisesRegex(ValueError, "keyword.json"):
-                loc_keyword.doc_keyword()
-            (Path(thu_muc) / "keyword.json").write_text("{", encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "keyword.json"):
-                loc_keyword.doc_keyword()
+class KiemThuCauHinh(unittest.TestCase):
+    def test_keyword_chi_co_hai_danh_sach(self):
+        duong_dan = Path(__file__).resolve().parent.parent / "keyword.json"
+        with duong_dan.open(encoding="utf-8") as tep:
+            cau_hinh = json.load(tep)
+        self.assertEqual(list(cau_hinh), ["Nhom_Nghanh", "Ki_Nang"])
+        self.assertEqual(cau_hinh["Nhom_Nghanh"], [
+            "Data Analyst", "Data Scientist", "Data Engineer",
+            "AI Engineer", "Database Administrator",
+        ])
+        ky_nang = cau_hinh["Ki_Nang"]
+        self.assertTrue(ky_nang)
+        self.assertTrue(all(isinstance(muc, str) and muc.strip() for muc in ky_nang))
+        self.assertEqual(len(ky_nang), len(set(ky_nang)))
 
 
 class KiemThuBase(unittest.TestCase):
@@ -82,10 +52,10 @@ class KiemThuBase(unittest.TestCase):
         self.duong_dan = Path(self.thu_muc.name) / "raw.csv"
         self.schema = crawlers.doc_schema()
         self.dong = {
-            "Nguon": "topcv", "URL_Goc": "https://example.com/job/1?ref=abc",
+            "Web": "topcv", "URL_Goc": "https://example.com/job/1?ref=abc",
             "Timestamp": crawlers.danh_dau_bat_dau(), "Tieu_De": "Data Analyst",
-            "Cong_Ty": "Công ty", "Dia_Diem_Goc": "Hà Nội",
-            "Mo_Ta_Cong_Viec_Goc": '  Mô tả, "Python"\nDòng mới  ',
+            "Dia_Diem": "Hà Nội",
+            "Mo_Ta_Cong_Viec": '  Mô tả, "Python"\nDòng mới  ',
         }
 
     def test_robots_va_host(self):
@@ -150,15 +120,15 @@ class KiemThuBase(unittest.TestCase):
         crawlers.xuat_csv(self.duong_dan, [])
         self.assertFalse(self.duong_dan.exists())
         with patch("builtins.print") as in_canh_bao:
-            crawlers.xuat_csv(self.duong_dan, [dict(self.dong, thua=1, Ky_Nang_Goc=["Python", "SQL"])])
+            crawlers.xuat_csv(self.duong_dan, [dict(self.dong, thua=1, Ky_Nang=["Python", "SQL"])])
             in_canh_bao.assert_called_once()
         with self.duong_dan.open(encoding="utf-8-sig", newline="") as tep:
             self.assertEqual(csv.DictReader(tep).fieldnames, self.schema["required"])
         dong = crawlers.doc_csv(self.duong_dan)[0]
-        self.assertEqual(dong["Mo_Ta_Cong_Viec_Goc"], self.dong["Mo_Ta_Cong_Viec_Goc"])
+        self.assertEqual(dong["Mo_Ta_Cong_Viec"], self.dong["Mo_Ta_Cong_Viec"])
         self.assertEqual(dong["URL_Goc"], self.dong["URL_Goc"])
-        self.assertEqual(json.loads(dong["Ky_Nang_Goc"]), ["Python", "SQL"])
-        self.assertIsNone(dong["Luong_Goc"])
+        self.assertEqual(json.loads(dong["Ky_Nang"]), ["Python", "SQL"])
+        self.assertIsNone(dong["Luong"])
         with patch("builtins.print") as in_canh_bao:
             crawlers.xuat_csv(self.duong_dan, [self.dong])
             in_canh_bao.assert_not_called()
@@ -211,8 +181,6 @@ class KiemThuBase(unittest.TestCase):
                     khoa = crawlers.khoa_url(url)
                     if khoa in da_luu or not crawlers.duoc_phep(rp, "https://example.com", url, "bot"):
                         continue
-                    if not crawlers.la_tin_muc_tieu(tieu_de):
-                        continue
                     thoi_gian = crawlers.danh_dau_bat_dau()
                     noi_dung, trang_thai = crawlers.tai_thu_lai(
                         Mock(return_value=(tieu_de, "ok")), url, thong_ke, ham_nghi=Mock()
@@ -228,8 +196,8 @@ class KiemThuBase(unittest.TestCase):
                 crawlers.xuat_csv(self.duong_dan, cac_dong)
         cac_dong = crawlers.doc_csv(self.duong_dan)
         self.assertEqual([dong["URL_Goc"] for dong in cac_dong],
-                         [danh_sach[0][0], danh_sach[4][0]])
-        self.assertEqual(thong_ke["ok"], 2)
+                         [danh_sach[0][0], danh_sach[2][0], danh_sach[4][0]])
+        self.assertEqual(thong_ke["ok"], 3)
 
 
 if __name__ == "__main__":

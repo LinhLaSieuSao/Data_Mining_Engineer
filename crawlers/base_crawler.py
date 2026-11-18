@@ -3,8 +3,8 @@ BẮT ĐẦU -> kiem_thu_robot() -- không được phép/lỗi --> DỪNG
 -> doc_csv() -> tạo da_luu từ khoa_url() -> duyệt URL/phân trang
 -> khoa_url(): đã lưu -> BỎ QUA -> duoc_phep(): không được -> BỎ QUA
 -> danh_dau_bat_dau() -> tai_thu_lai(): bi_chan/ngat_mach -> DỪNG;
-   lỗi khác -> BỎ QUA -> bóc thông tin -> loc_keyword.la_tin_muc_tieu():
-   không thuộc nhóm -> BỎ QUA -> thêm dòng thô và cập nhật da_luu ngay
+   lỗi khác -> BỎ QUA -> bóc thông tin theo từ khóa của crawler nguồn
+   -> thêm dòng thô và cập nhật da_luu ngay
 -> xuat_csv() theo checkpoint, ví dụ mỗi 10 tin mới -> URL tiếp -> KẾT THÚC.
 """
 
