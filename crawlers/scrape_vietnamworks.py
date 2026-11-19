@@ -248,24 +248,45 @@ def muc_heading(page, ten_muc: str):
     return page.get_by_role("heading", name=ten_muc, exact=True).first
 
 
+def _inner_text_ban_sao(locator, selectors_xoa: list[str] | None = None,
+                        xoa_heading: str | None = None) -> str | None:
+    """Đọc innerText của bản sao còn layout để giữ xuống dòng do DOM hiển thị."""
+    try:
+        return locator.evaluate("""(e, options) => {
+          const copy = e.cloneNode(true);
+          for (const selector of options.selectorsXoa) {
+            copy.querySelectorAll(selector).forEach(n => n.remove());
+          }
+          if (options.xoaHeading) copy.querySelector(options.xoaHeading)?.remove();
+          const rect = e.getBoundingClientRect();
+          copy.style.setProperty('position', 'absolute', 'important');
+          copy.style.setProperty('left', '-100000px', 'important');
+          copy.style.setProperty('top', '0', 'important');
+          if (rect.width) copy.style.setProperty('width', `${rect.width}px`, 'important');
+          document.body.appendChild(copy);
+          try {
+            return copy.innerText.trim() || null;
+          } finally {
+            copy.remove();
+          }
+        }""", {
+            "selectorsXoa": selectors_xoa or [],
+            "xoaHeading": xoa_heading,
+        })
+    except PlaywrightError:
+        return None
+
+
 def noi_dung_muc(page, ten_muc: str, bao_gom_heading: bool = True) -> str | None:
     """Lấy nguyên văn mục theo heading; có thể bỏ heading khỏi giá trị."""
     heading = muc_heading(page, ten_muc)
     if not heading.count():
         return None
-    try:
-        return heading.locator(SELECTOR_PARENT).evaluate("""(e, options) => {
-          const copy = e.cloneNode(true);
-          copy.querySelectorAll(options.buttonSelector).forEach(n => n.remove());
-          if (!options.baoGomHeading) copy.querySelector(options.headingSelector)?.remove();
-          return copy.innerText.trim() || null;
-        }""", {
-            "baoGomHeading": bao_gom_heading,
-            "buttonSelector": SELECTOR_NUT_VA_ROLE,
-            "headingSelector": SELECTOR_H2,
-        })
-    except PlaywrightError:
-        return None
+    return _inner_text_ban_sao(
+        heading.locator(SELECTOR_PARENT),
+        selectors_xoa=[SELECTOR_NUT_VA_ROLE],
+        xoa_heading=None if bao_gom_heading else SELECTOR_H2,
+    )
 
 
 def toan_van_mo_ta(page) -> str | None:
@@ -290,7 +311,17 @@ def toan_van_mo_ta(page) -> str | None:
           [...copy.children].forEach(child => { if (![...keep].some(node => child === node || child.contains(node))) child.remove(); });
           copy.querySelectorAll(options.buttonSelector).forEach(n => n.remove());
           copy.querySelectorAll(options.bannerSelector).forEach(n => n.remove());
-          return copy.innerText.trim() || null;
+          const rect = root.getBoundingClientRect();
+          copy.style.setProperty('position', 'absolute', 'important');
+          copy.style.setProperty('left', '-100000px', 'important');
+          copy.style.setProperty('top', '0', 'important');
+          if (rect.width) copy.style.setProperty('width', `${rect.width}px`, 'important');
+          document.body.appendChild(copy);
+          try {
+            return copy.innerText.trim() || null;
+          } finally {
+            copy.remove();
+          }
         }""", {
             "names": list(TEN_HEADING),
             "h2Selector": SELECTOR_H2,
@@ -332,6 +363,13 @@ def tach_ky_nang(cac_muc: list[str]) -> str | None:
     """Tuần tự hóa nguyên văn từng thẻ kỹ năng thành chuỗi JSON."""
     ky_nang = [muc.strip() for muc in cac_muc if muc.strip()]
     return json.dumps(ky_nang, ensure_ascii=False) if ky_nang else None
+
+
+def dong_don_gian(gia_tri):
+    """Thay CR/LF thật bằng hai ký tự backslash+n, giữ nguyên phần còn lại."""
+    if not isinstance(gia_tri, str):
+        return gia_tri
+    return gia_tri.replace("\r\n", r"\n").replace("\r", r"\n").replace("\n", r"\n")
 
 
 def lay_thong_tin_dom(page) -> str:
@@ -422,7 +460,7 @@ def tach_ban_ghi(page, job: dict, url_tim_kiem: str,
                 bat_buoc,
             ) if not gia_tri
         )
-    return {
+    dong = {
         "Web": "vietnamworks",
         "Ma_Tin_Nguon": str(job["jobId"]) if job.get("jobId") is not None else None,
         "URL_Goc": page.url,
@@ -441,7 +479,8 @@ def tach_ban_ghi(page, job: dict, url_tim_kiem: str,
         "Yeu_Cau_Chi_Tiet": yeu_cau,
         "Quyen_Loi": quyen_loi,
         "Ky_Nang": ky_nang,
-    }, ""
+    }
+    return {truong: dong_don_gian(gia_tri) for truong, gia_tri in dong.items()}, ""
 
 
 def in_jsonl(dong: dict) -> None:
