@@ -141,8 +141,12 @@ def tai_thu_lai(ham_tai, url, thong_ke, *, khoang_nghi=(2.0, 5.0), so_lan_thu=3,
     return None, "that_bai"
 
 
-def xuat_csv(duong_dan, cac_dong):
-    """Kiểm tra dữ liệu rồi ghi CSV nguyên tử."""
+def xuat_csv(duong_dan, cac_dong, *, mot_dong_vat_ly=False):
+    """Kiểm tra dữ liệu rồi ghi CSV nguyên tử.
+
+    Khi bật ``mot_dong_vat_ly``, thay xuống dòng trong ô bằng ký tự ``\\n`` để
+    mỗi bản ghi chiếm đúng một dòng vật lý trong file CSV.
+    """
     if not cac_dong:
         return
     schema = doc_schema()
@@ -163,6 +167,8 @@ def xuat_csv(duong_dan, cac_dong):
                 gia_tri = json.dumps(gia_tri, ensure_ascii=False, default=str) if gia_tri else ""
             elif not isinstance(gia_tri, str):
                 gia_tri = str(gia_tri)
+            if mot_dong_vat_ly and isinstance(gia_tri, str):
+                gia_tri = gia_tri.replace("\r\n", r"\n").replace("\r", r"\n").replace("\n", r"\n")
             if cot in bat_buoc and gia_tri == "":
                 raise ValueError(f"Dòng {so_dong}: cột bắt buộc '{cot}' thiếu giá trị")
             dong_moi[cot] = gia_tri
