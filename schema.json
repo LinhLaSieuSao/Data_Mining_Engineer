@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "x-version": "2.0.0",
+  "x-version": "3.0.0",
   "x-schema-note": "Chỉ sửa schema qua Pull Request và báo cả nhóm; ô CSV rỗng tương đương null.",
   "x-column-order": "Thứ tự cột CSV theo mảng required.",
   "x-tracked-fields": [
     "Ma_Tin_Nguon", "URL_Goc", "URL_Tim_Kiem", "Tu_Khoa_Tim_Kiem",
-    "Tieu_De", "Dia_Diem", "Luong", "Kinh_Nghiem",
-    "Mo_Ta_Cong_Viec", "Ky_Nang"
+    "Tieu_De", "Ten_Cong_Ty", "Dia_Diem", "Luong", "Kinh_Nghiem",
+    "Mo_Ta_Cong_Viec", "Yeu_Cau_Chi_Tiet", "Quyen_Loi", "Ky_Nang"
   ],
   "title": "Khung dữ liệu tuyển dụng thô cho nhiều website",
   "type": "object",
@@ -19,6 +19,7 @@
     "Tu_Khoa_Tim_Kiem",
     "Timestamp",
     "Tieu_De",
+    "Ten_Cong_Ty",
     "Dia_Diem",
     "Luong",
     "Kinh_Nghiem",
@@ -26,6 +27,8 @@
     "Loai_Hop_Dong",
     "Ngay_Dang",
     "Mo_Ta_Cong_Viec",
+    "Yeu_Cau_Chi_Tiet",
+    "Quyen_Loi",
     "Ky_Nang"
   ],
   "properties": {
@@ -61,6 +64,10 @@
       "type": "string",
       "description": "Tiêu đề nguyên văn, bắt buộc, không null."
     },
+    "Ten_Cong_Ty": {
+      "type": "string",
+      "description": "Tên công ty nguyên văn như tin đăng, bắt buộc, không null; không chuẩn hóa tên pháp lý."
+    },
     "Dia_Diem": {
       "type": "string",
       "description": "Địa điểm nguyên văn, chưa quy về thành phố hoặc Remote; bắt buộc, không null."
@@ -87,7 +94,15 @@
     },
     "Mo_Ta_Cong_Viec": {
       "type": "string",
-      "description": "Toàn văn khối mô tả từ website gồm nội dung công việc, yêu cầu, quyền lợi và thông tin khác; giữ nguyên tiêu đề mục và ký tự xuống dòng, bắt buộc, không null."
+      "description": "Toàn văn khối mô tả từ website gồm nội dung công việc, yêu cầu, quyền lợi và thông tin khác; giữ nguyên thứ tự, tiêu đề mục và ký tự xuống dòng, bắt buộc, không null. Không xóa các phần đã chép sang cột riêng."
+    },
+    "Yeu_Cau_Chi_Tiet": {
+      "type": ["string", "null"],
+      "description": "Nguyên văn mục yêu cầu/điều kiện ứng tuyển, giữ tiêu đề, thứ tự và ký tự xuống dòng; null nếu nguồn không tách riêng mục này."
+    },
+    "Quyen_Loi": {
+      "type": ["string", "null"],
+      "description": "Nguyên văn mục quyền lợi/phúc lợi, giữ tiêu đề, thứ tự và ký tự xuống dòng; null nếu nguồn không tách riêng mục này."
     },
     "Ky_Nang": {
       "type": ["string", "null"],
