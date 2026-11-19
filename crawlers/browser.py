@@ -1,4 +1,4 @@
-"""Định danh HTTP và phiên Chrome để người dùng đăng nhập xem lương ITviec."""
+"""Duyệt trang TopCV bằng HTTP và quản lý phiên xem lương ITviec."""
 
 from __future__ import annotations
 
@@ -12,6 +12,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urldefrag, urljoin
+
+from bs4 import BeautifulSoup
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -34,6 +37,31 @@ DUONG_DAN_DANG_NHAP = {"/sign_in", "/users/sign_in", "/dang-nhap"}
 THOI_GIAN_DANG_NHAP = 300
 THU_MUC_PHIEN = Path.home() / ".itec3417_itviec_profile"
 NGUONG_KHOA_LUONG = 3
+
+
+def duyet_trang_topcv(url, tai, max_pages):
+    """Nối các lô tin theo nút trang sau TopCV công bố trong HTML."""
+    da_duyet = set()
+    while url and url not in da_duyet:
+        da_duyet.add(url)
+        html, ma = tai(url)
+        soup = BeautifulSoup(html, "html.parser") if html is not None else None
+        yield url, soup, ma
+        if soup is None or max_pages and len(da_duyet) >= max_pages:
+            return
+        nut = soup.select_one('.box-pagination a[rel~="next"]')
+        if nut is None:
+            return
+        href = nut.get("data-href")
+        if not isinstance(href, str) or not href.strip():
+            href = nut.get("href")
+        if not isinstance(href, str) or not href.strip():
+            return
+        try:
+            url = urldefrag(urljoin(url, href)).url
+        except ValueError:
+            yield url, None, "loi_lien_ket"
+            return
 
 
 def mo_chrome(playwright: Playwright, thu_muc_phien: Path) -> BrowserContext:

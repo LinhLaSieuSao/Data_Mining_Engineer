@@ -1,7 +1,6 @@
 # Thu thập và khai phá dữ liệu tuyển dụng CNTT tại Việt Nam
 
 [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB)](requirements.txt)
-[![Playwright 1.65.1+](https://img.shields.io/badge/Playwright-1.65.1%2B-2EAD33)](requirements.txt)
 [![pandas 3.1.1+](https://img.shields.io/badge/pandas-3.1.1%2B-150458)](requirements.txt)
 [![scikit-learn 1.7.2+](https://img.shields.io/badge/scikit--learn-1.7.2%2B-F7931E)](requirements.txt)
 [![mlxtend 0.23.4+](https://img.shields.io/badge/mlxtend-0.23.4%2B-6A5ACD)](requirements.txt)
@@ -51,13 +50,13 @@ Nhóm dự kiến trả lời bốn câu hỏi sau trong phạm vi mẫu thu th�
 
 | Nguồn | Người phụ trách | Script dự kiến | CSV nguồn dự kiến |
 | --- | --- | --- | --- |
-| ITviec | Lưu Đức Linh | `crawlers/scrape_itviec.py` | `data/raw/raw_itviec.csv` |
-| TopCV | Trần Đăng Khoa | `crawlers/scrape_topcv.py` | `data/raw/raw_topcv.csv` |
+| ITviec | Lưu Đức Linh | `crawlers/itviec_crawler.py` | `data/raw_data/raw_data_itviec.csv` |
+| TopCV | Trần Đăng Khoa | `crawlers/topcv_crawler.py` | `data/raw_data/raw_data_topcv.csv` |
 | VietnamWorks | Trần Minh Hiếu | `crawlers/scrape_vietnamworks.py` | `data/raw/raw_vietnamworks.csv` |
 | LinkedIn | Trần Minh Hiếu | `crawlers/scrape_Linkedin.py` | `data/raw/raw_Linkedin.csv` |
 | TopDev | Trần Đăng Khoa | `crawlers/scrape_topdev.py` | `data/raw/raw_topdev.csv` |
 
-**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Các hàm trong `crawlers/base_crawler.py` hỗ trợ kiểm tra robots, thử lại, đối chiếu URL và đọc/ghi CSV theo schema. Từng crawler nguồn dùng `Nhom_Nghanh` và `Ki_Nang` trong `keyword.json`, tự quyết định từ khóa tìm kiếm và cách lọc tin cho website đó. Chưa có các script nguồn nên chưa xác nhận khả năng cào thực tế. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và `Web` để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
+**URL tìm kiếm, từ khóa thực dùng, bộ lọc, phân trang và số tin theo từng nguồn:** [Bổ sung trước và sau khi cào]. Các hàm trong `crawlers/base_crawler.py` hỗ trợ kiểm tra robots, thử lại, đối chiếu URL và đọc/ghi CSV theo schema. Các crawler chọn từ khóa trong `keyword.json` và áp dụng bộ lọc phù hợp với từng website. Mỗi bản ghi giữ văn bản gốc, `URL_Goc`, `Timestamp` và `Web` để giảng viên đối chiếu ngẫu nhiên với tin đăng và chạy demo tại lớp.
 
 Bảng phân công liệt kê năm nguồn cần phát triển, nhưng mục kiểm tra và gộp trong cùng tài liệu vẫn ghi ba nguồn; nhóm cần xác nhận những nguồn sẽ đưa vào bộ dữ liệu cuối.
 
@@ -185,11 +184,36 @@ Kích hoạt môi trường: Windows PowerShell dùng `.\.venv\Scripts\Activate.
 python -m pip install -r requirements.txt
 ```
 
-**Trình duyệt/Playwright, thông tin đăng nhập và cấu hình:** [Chốt sau khi crawler được triển khai và kiểm thử]. `requirements.txt` vẫn cần được hoàn thiện và thử cài trên môi trường mới. Không đưa tài khoản hoặc khóa vào repository.
-
 ### Chạy pipeline
 
-**Thứ tự dự kiến:** cào từng nguồn → kiểm tra và gộp CSV → chuẩn hóa → làm sạch → chạy notebook. Lệnh cào từng nguồn, công cụ gộp và toàn bộ pipeline cần bổ sung sau khi được triển khai; nếu chỉ tái tạo phân tích, dùng snapshot `data/clean_data.csv` thay vì cào lại.
+**Thứ tự dự kiến:** cào từng nguồn → kiểm tra và gộp CSV → chuẩn hóa → làm sạch → chạy notebook. Lệnh cào các nguồn còn lại, công cụ gộp và toàn bộ pipeline cần bổ sung sau khi được triển khai; nếu chỉ tái tạo phân tích, dùng snapshot `data/clean_data.csv` thay vì cào lại.
+
+Crawler ITviec tải danh sách và chi tiết công khai bằng `requests`, rồi bóc HTML bằng BeautifulSoup. Crawler duyệt danh mục của các nhóm ngành trước, sau đó mới chạy truy vấn nhóm ngành + kỹ năng. Phân trang, tải thêm và cuộn vô hạn dựa vào URL tiếp theo được công bố trên trang, kể cả khi phản hồi AJAX chứa HTML. Nếu thao tác chỉ chạy JavaScript và trang không cung cấp URL tiếp theo, crawler dừng truy vấn đó.
+
+```bash
+python crawlers/itviec_crawler.py --nhom "Data Analyst" --chi-danh-muc --limit 20
+```
+
+Lệnh cào công khai ghi mức lương hiển thị bằng HTTP. Các tin yêu cầu đăng nhập còn trống cột `Luong`. Sau khi lệnh cào kết thúc, có thể chạy lệnh riêng để bổ sung lương cho các dòng đang thiếu.
+
+```bash
+python crawlers/browser.py --limit 20
+```
+
+Lệnh bổ sung cần Playwright và Chrome hoặc Chromium (`python -m playwright install chromium`). Người dùng nhập email và mật khẩu trong cửa sổ mở với profile riêng ngoài repository `~/.itec3417_itviec_profile/`. Nếu Chrome hiện CAPTCHA, hãy xác minh trực tiếp trong cửa sổ đó. Lệnh chờ tối đa 5 phút và kiểm tra lại phiên trước khi đọc lương. Nếu phiên bị từ chối hoặc ba tin liên tiếp vẫn yêu cầu đăng nhập, lệnh dừng và lưu các giá trị lương đã cập nhật.
+
+Nội dung Salary Range hiển thị được lưu nguyên văn vào cột `Luong`. Câu giữ chỗ, lỗi và lương không công bố được để trống. Khi chạy lại, crawler có thể bổ sung lương cho URL đã có trong CSV. `--limit` giới hạn số tin xử lý, gồm tin mới và tin cần bổ sung lương.
+
+`data/raw_data/raw_data_itviec.csv` có 18 cột ngang và mỗi tin chiếm đúng một dòng vật lý. Ký tự xuống dòng trong ô mô tả/yêu cầu/quyền lợi được lưu thành chữ `\n`; bước làm sạch có thể khôi phục bằng `.replace(r"\n", "\n")` khi cần phân tích văn bản nhiều dòng.
+
+Crawler TopCV dùng `requests` và BeautifulSoup để tải HTML công khai. Trước khi cào, `kiem_thu_robot()` trong `crawlers/base_crawler.py` kiểm tra các URL tìm kiếm theo `robots.txt`. Crawler dùng cùng quy tắc để kiểm tra các trang tiếp theo, trang chi tiết và URL chuyển hướng. Hàm duyệt trong `crawlers/browser.py` đọc `data-href` trên nút sang trang kế tiếp để lần lượt lấy các lô tin. Lệnh dưới đây duyệt tối đa hai trang Data Analyst. Dùng `--max-pages 0` để duyệt đến trang cuối, `--limit 5` để thử với tối đa 5 tin mới, `--delay-min` và `--delay-max` để tùy chỉnh thời gian giãn cách request, hoặc `--url` để dùng URL tìm kiếm đã có bộ lọc.
+
+```bash
+python -m pip install requests beautifulsoup4
+python crawlers/topcv_crawler.py --keyword "Data Analyst" --max-pages 2
+```
+
+Khi bỏ `--keyword` và `--url`, TopCV tìm theo năm nhóm ngành trong `keyword.json`. Tệp `data/raw_data/raw_data_topcv.csv` dùng cùng 18 cột, UTF-8 BOM và quy ước xuống dòng của ITviec. Chạy lại sẽ bỏ qua những mã tin đã có trong tệp. Trường tùy chọn được để trống khi tin không công bố thông tin đó.
 
 Chạy kiểm thử bộ công cụ chung từ thư mục gốc repository:
 
@@ -246,6 +270,8 @@ Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** 
 | 25/11/2026 | Hoàn thiện báo cáo PDF | Trần Đăng Khoa | Chưa làm |
 | 25/11/2026 | Hoàn thiện slide PDF/PowerPoint | Lưu Đức Linh; Trần Minh Hiếu | Chưa làm |
 | 26/11/2026 | Rà soát, nộp mã nguồn, dữ liệu, notebook, báo cáo và slide | Cả nhóm | Chưa làm |
+
+`itviec_crawler` đã rút gọn; chuẩn hóa ngày đăng/kinh nghiệm/lương/kỹ năng chuyển sang bước làm sạch.
 
 Trạng thái được ghi theo bảng phân công trong PDF, chưa xác nhận tiến độ thực tế. Bảng đặt hạn báo cáo/slide là 25/11 và hạn nộp là 26/11, nhưng phần yêu cầu chi tiết ở cuối PDF vẫn ghi lần lượt 20/11 và 21/11; nhóm cần xác nhận hạn chính thức với giảng viên.
 

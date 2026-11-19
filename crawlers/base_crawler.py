@@ -16,6 +16,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
@@ -37,28 +38,39 @@ def doc_schema() -> dict:
         raise ValueError("Không đọc được schema.json") from loi
 
 
-def kiem_thu_robot(trang_chu, url_muc_tieu, ten_bot) -> tuple:
-    """Trả (robots, "") nếu được phép; ngược lại trả (None, lý do)."""
+def kiem_thu_robot(
+    trang_chu, url_muc_tieu, ten_bot, *, tai_robots: Callable[[str], tuple[bytes | None, str]] | None = None,
+) -> tuple[RobotFileParser | None, str]:
+    """Kiểm tra URL mục tiêu. Hàm tải tùy chọn trả (bytes, mã) như tai_thu_lai()."""
     thanh_phan = urlsplit(trang_chu)
     if not thanh_phan.scheme or not thanh_phan.netloc:
         return None, "trang_chu không hợp lệ"
     goc = f"{thanh_phan.scheme}://{thanh_phan.netloc}"
-    yeu_cau = urllib.request.Request(f"{goc}/robots.txt", headers={"User-Agent": ten_bot})
-    try:
-        with urllib.request.urlopen(yeu_cau, timeout=TIMEOUT_ROBOTS) as phan_hoi:
-            ma = phan_hoi.status
-            noi_dung = phan_hoi.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as loi:
-        ma = loi.code
-    except (urllib.error.URLError, OSError) as loi:
-        return None, f"lỗi mạng khi tải robots.txt: {loi}"
-    if ma == 404:
-        # Nhóm chủ động dừng khi robots.txt trả 404; RFC 9309 cho phép crawler tiếp tục trong trường hợp này.
-        return None, "không tìm thấy robots.txt (HTTP 404)"
-    if ma != 200:
-        return None, f"không tải được robots.txt (HTTP {ma})"
+    url_robots = f"{goc}/robots.txt"
+    if tai_robots is not None:
+        noi_dung, trang_thai = tai_robots(url_robots)
+        if trang_thai == "khong_ton_tai":
+            return None, "không tìm thấy robots.txt"
+        if trang_thai != "ok" or noi_dung is None:
+            return None, f"không tải được robots.txt ({trang_thai})"
+    else:
+        yeu_cau = urllib.request.Request(url_robots, headers={"User-Agent": ten_bot})
+        try:
+            with urllib.request.urlopen(yeu_cau, timeout=TIMEOUT_ROBOTS) as phan_hoi:
+                ma = phan_hoi.status
+                noi_dung = phan_hoi.read()
+        except urllib.error.HTTPError as loi:
+            ma = loi.code
+            noi_dung = None
+        except (urllib.error.URLError, OSError) as loi:
+            return None, f"lỗi mạng khi tải robots.txt: {loi}"
+        if ma == 404:
+            # Nhóm chủ động dừng khi robots.txt trả 404.
+            return None, "không tìm thấy robots.txt (HTTP 404)"
+        if ma != 200 or noi_dung is None:
+            return None, f"không tải được robots.txt (HTTP {ma})"
     rp = RobotFileParser()
-    rp.parse(noi_dung.splitlines())
+    rp.parse(noi_dung.decode("utf-8-sig", errors="replace").splitlines())
     for url in url_muc_tieu or [f"{goc}/"]:
         if not rp.can_fetch(ten_bot, url):
             return None, f"robots.txt không cho phép: {url}"
