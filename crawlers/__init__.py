@@ -12,8 +12,10 @@ from .base_crawler import (
     tai_thu_lai,
     xuat_csv,
 )
+
+
 __all__ = [
     "DUNG", "doc_schema", "kiem_thu_robot", "duoc_phep", "doc_csv",
     "khoa_url", "danh_dau_bat_dau", "nghi_ngau_nhien", "tai_thu_lai",
-    "xuat_csv",
+    "xuat_csv"
 ]
