@@ -164,18 +164,9 @@ Có thể đọc trực tiếp sáu CSV trong `data/raw/` để kiểm tra dữ 
 git clone https://github.com/LinhLaSieuSao/Data_Mining_Engineer.git
 cd Data_Mining_Engineer
 ```
-
-Nếu nhận mã nguồn dưới dạng ZIP, giải nén rồi mở terminal trong thư mục có `README.md`.
-
 ### Tạo môi trường và cài thư viện
 
 Dùng Python 3.13 trở lên theo `requirements.txt`. Tạo môi trường ảo từ thư mục gốc của repository.
-
-```bash
-python -m venv .venv
-```
-
-Kích hoạt bằng `.\.venv\Scripts\Activate.ps1` trên Windows PowerShell hoặc `source .venv/bin/activate` trên macOS/Linux. Sau đó cài thư viện và Chromium cho các crawler dùng Playwright.
 
 ```bash
 python -m pip install -r requirements.txt
@@ -191,10 +182,6 @@ python crawlers/carrerviet.py --max-pages 1
 python crawlers/saramin.py --max-pages 1
 python crawlers/topdev.py --max-pages 1
 ```
-
-### ITviec và TopCV
-
-Hai crawler dùng `requests` và BeautifulSoup để thu thập HTML công khai.
 
 #### ITviec
 
@@ -251,8 +238,6 @@ Sau khi thu thập, kiểm tra tiêu đề 18 cột theo `schema.json`, đối c
 | Báo cáo PDF | `reports/NhomTamTau_BaoCao_BaiTapLon.pdf` | Dự kiến |
 | Slide | `reports/NhomTamTau_Slide_BaoCao.pdf` | Dự kiến |
 
-Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** (không tính phụ lục), gồm sáu chương: tổng quan; thu thập và tiền xử lý; EDA; gom cụm và luật kết hợp; phân lớp và đánh giá; kết luận và khuyến nghị. Phần thuyết trình kéo dài **10–12 phút**. Báo cáo cần có bảng phân công, tỷ lệ đóng góp được nhóm xác nhận, nguồn hình/bảng và phần giới hạn nghiên cứu. Slide dùng cùng số liệu với notebook và báo cáo.
-
 ## 10. Tiến độ và phương án dự phòng
 
 | Hạn theo bảng phân công | Công việc | Phụ trách | Trạng thái |
@@ -275,11 +260,6 @@ Theo **đề bài gốc đã đối chiếu**, báo cáo dài **15–25 trang** 
 | 25/11/2026 | Hoàn thiện slide PDF/PowerPoint | Lưu Đức Linh và Trần Minh Hiếu | Dự kiến |
 | 26/11/2026 | Rà soát, nộp mã nguồn, dữ liệu, notebook, báo cáo và slide | Cả nhóm | Dự kiến |
 
-Bảng dùng các mốc báo cáo và slide ngày 25/11, nộp ngày 26/11 theo bảng phân công. Phần yêu cầu chi tiết trong PDF ghi lần lượt 20/11 và 21/11. Nhóm cần xác nhận hạn chính thức với giảng viên.
-
-### Quy trình cộng tác
-
-Theo bảng phân công, mỗi thành viên làm trên nhánh Git riêng và tạo Pull Request để nhóm review trước khi gộp vào nhánh chính. Sau mỗi phần việc, nhóm đồng bộ tiến độ và kiểm tra chéo. Mọi thành viên cần giải thích được mã nguồn, thuật toán và số liệu khi vấn đáp; tỷ lệ đóng góp thực tế sẽ được xác nhận trong báo cáo.
 
 ## 11. Hạn chế dự kiến
 
@@ -287,10 +267,9 @@ Dữ liệu đến từ sáu nguồn ở mục 4. Mẫu phản ánh các tin tì
 
 Mỗi website có thuật toán hiển thị, bộ lọc, chính sách truy cập và cấu trúc dữ liệu khác nhau, nên số lượng và chất lượng tin thu được có thể chênh lệch. Một tin có thể xuất hiện trên nhiều website; nhiều tin không công bố lương hoặc chỉ ghi “thỏa thuận”. Kết quả phân tích cần ghi rõ số tin theo từng nguồn, tỷ lệ thiếu và quy tắc khử trùng. Những hạn chế thực tế sẽ được cập nhật sau khi thu thập và kiểm tra dữ liệu.
 
-## 12. Tài liệu tham khảo và giấy phép
+## 12. Tài liệu tham khảo 
 
-- [Đề bài lớn của môn Khai phá dữ liệu — nguồn nội bộ của nhóm].
-- [URL trang tìm kiếm, `robots.txt`, điều khoản sử dụng và ngày truy cập của từng nguồn — bổ sung trước khi thu thập].
-- [Tài liệu phương pháp làm sạch, gom cụm, luật kết hợp và phân lớp — bổ sung khi triển khai].
+- BÀI TẬP LỚN: THU THẬP VÀ KHAI PHÁ DỮ LIỆU TUYỂN DỤNG THỰC TẾ TRONG NGÀNH CNTT & KHOA HỌC DỮ LIỆU TẠI VIỆT NAM.
+- Khung cào dữ liệu từ nhiều nguồn tham khảo (https://github.com/SonPhatTranDeveloper/vietnam-it-job-trends).
 - Khung trình bày dữ liệu và khả năng tái lập tham khảo [Social Science Data Editors](https://github.com/social-science-data-editors/template_README).
 
