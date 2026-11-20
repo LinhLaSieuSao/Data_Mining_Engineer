@@ -60,8 +60,6 @@ Số bản ghi được đếm từ các CSV trong bảng, bỏ dòng tiêu đ�
 
 Trước khi chạy từng crawler, nhóm sẽ kiểm tra `robots.txt` và điều khoản của website đó, ghi lại quyết định sử dụng dữ liệu trong mục nguồn tham khảo. Crawler cần dùng tốc độ truy cập hợp lý, thời gian chờ giữa các yêu cầu và User-Agent có thể nhận diện; không vượt cơ chế đăng nhập hoặc kiểm soát truy cập. Nhóm không thu thập thông tin cá nhân của ứng viên và không đưa cookie, tài khoản hoặc khóa truy cập vào repository. Dữ liệu chỉ phục vụ đồ án học thuật; quyền chia sẻ từng tệp sẽ được xác nhận trước khi công bố.
 
-`kiem_thu_robot()` trả `(rp, "")` khi các URL mục tiêu được phép; nếu không, hàm trả `(None, ly_do)` và crawler phải dừng, đồng thời có thể hiển thị lý do. Thông báo phân biệt robots không tồn tại (404), đường dẫn bị cấm, lỗi mạng và các mã HTTP khác. Nhóm chủ động dừng khi gặp 404 theo chính sách thận trọng; RFC 9309 cho phép crawler tiếp tục trong trường hợp này.
-
 ```python
 rp, ly_do = kiem_thu_robot(trang_chu, cac_url_muc_tieu, ten_bot)
 if rp is None:
@@ -73,7 +71,7 @@ else:
 
 ## 5. Quy trình xử lý và schema
 
-`schema.json` phiên bản 3.0.0 quy định tên và thứ tự 18 cột của CSV. Các trường bắt buộc gồm `Web`, `URL_Goc`, `Timestamp`, `Tieu_De`, `Ten_Cong_Ty`, `Dia_Diem` và `Mo_Ta_Cong_Viec`. Những mục tùy chọn như `Luong`, `Kinh_Nghiem`, `Yeu_Cau_Chi_Tiet` và `Quyen_Loi` có thể để trống khi nguồn thiếu dữ liệu.
+`schema.json` quy định tên và thứ tự 18 cột của CSV. Các trường bắt buộc gồm `Web`, `URL_Goc`, `Timestamp`, `Tieu_De`, `Ten_Cong_Ty`, `Dia_Diem` và `Mo_Ta_Cong_Viec`. Những mục tùy chọn như `Luong`, `Kinh_Nghiem`, `Yeu_Cau_Chi_Tiet` và `Quyen_Loi` có thể để trống khi nguồn thiếu dữ liệu.
 
 Sáu CSV đã lưu trong `data/raw/` dùng UTF-8 BOM và mỗi tin chiếm một dòng vật lý. Xuống dòng trong nội dung được biểu diễn bằng `\n` và có thể khôi phục bằng `.replace(r"\n", "\n")` khi xử lý văn bản. Dùng trình đọc CSV để xử lý đúng dấu phẩy và dấu ngoặc kép trong nội dung tin.
 
