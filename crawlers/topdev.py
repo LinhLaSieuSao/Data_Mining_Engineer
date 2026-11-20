@@ -21,7 +21,7 @@ TRANG_CHU = "https://topdev.vn"
 TEN_BOT = "DataMining-Crawler/1.0"
 THU_MUC = Path(__file__).resolve().parent.parent
 KEYWORDS_MAC_DINH = THU_MUC / "keyword.json"
-OUT_MAC_DINH = THU_MUC / "data/raw/topdev.csv"
+OUT_MAC_DINH = THU_MUC / "data" / "raw" / "raw_topdev.csv"
 SO_LAN_CUON = 8
 ANH_XA_COT = {
     "web": "Web", "id": "Ma_Tin_Nguon", "url": "URL_Goc",
@@ -98,7 +98,7 @@ def parse_cards(html: str) -> list[dict[str, Any]]:
         company_node = card.select_one("span.line-clamp-1")
         grid = card.select_one("div.mt-2.grid")
         grid_values = [x.get_text(" ", strip=True) for x in grid.select("span.line-clamp-1")] if grid else []
-        salary_node = next((x for x in card.select("span") if "salary" in " ".join(x.get("class", [])).lower()), None)
+        salary_node = card.select_one("span[class*='salary' i]")
         skills = [x.get_text(" ", strip=True) for x in card.select("a.line-clamp-1.h-6") if x.get_text(" ", strip=True)]
         posted_node = card.select_one("span.text-xs.text-text-500")
         rows.append({
@@ -192,8 +192,9 @@ def _mo_trang(page: Any, url: str, loai: str, khoang_nghi: tuple[float, float]) 
 
 def _row(schema: dict[str, Any], card: dict[str, Any], detail: dict[str, Any],
          search_url: str, keyword: str, timestamp: str) -> dict[str, Any]:
+    match = re.search(r"(\d+)(?:\.html)?$", card["url"].rstrip("/"))
     values = {
-        "web": "topdev", "id": re.search(r"(\d+)(?:\.html)?$", card["url"].rstrip("/")).group(1) if re.search(r"(\d+)(?:\.html)?$", card["url"].rstrip("/")) else None,
+        "web": "topdev", "id": match.group(1) if match is not None else None,
         "url": card["url"], "search_url": search_url, "search_keyword": keyword,
         "timestamp": timestamp, "title": detail.get("title") or card.get("title"),
         "company": detail.get("company") or card.get("company"), "location": card.get("location"),

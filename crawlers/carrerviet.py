@@ -42,7 +42,7 @@ from crawlers import (
 # ---------------------------------------------------------------------------
 TRANG_CHU = "https://careerviet.vn"
 TEN_BOT = "DataMining-Crawler/1.0"
-DUONG_DAN_MAC_DINH = "data/raw/careerviet.csv"
+DUONG_DAN_MAC_DINH = _THU_MUC_GOC / "data" / "raw" / "raw_careerviet.csv"
 DUONG_DAN_TU_KHOA = "keyword.json"
 
 # ---------------------------------------------------------------------------
@@ -160,9 +160,12 @@ def parse_cards(html: str) -> list[dict]:
         title_el = card.select_one(
             "a.job_link, a.job-title, h2 a, h3 a, a[href*='/vi/tim-viec-lam/']"
         )
-        if not title_el:
+        if title_el is None:
             continue
-        href = title_el.get("href", "").strip()
+        href = title_el.get("href")
+        if not isinstance(href, str):
+            continue
+        href = href.strip()
         if not href or href == "#" or href.startswith("javascript"):
             continue
         if not href.startswith("http"):
@@ -180,8 +183,9 @@ def parse_cards(html: str) -> list[dict]:
         m = re.search(r"\.([0-9A-Za-z]+)\.html$", urlsplit(url).path)
         if m:
             ma_tin = m.group(1)
-        if not ma_tin and card.get("id"):
-            m2 = re.search(r"job-item-([0-9A-Za-z]+)", card.get("id"))
+        id_the = card.get("id")
+        if ma_tin is None and isinstance(id_the, str):
+            m2 = re.search(r"job-item-([0-9A-Za-z]+)", id_the)
             if m2:
                 ma_tin = m2.group(1)
 
@@ -195,7 +199,7 @@ def parse_cards(html: str) -> list[dict]:
         ket_qua.append({
             "url": url,
             "ma_tin": ma_tin,
-            "tieu_de": title_el.get_text(strip=True) if title_el else None,
+            "tieu_de": title_el.get_text(strip=True),
             "cong_ty": company_el.get_text(strip=True) if company_el else None,
             "luong": salary_el.get_text(strip=True) if salary_el else None,
             "dia_diem": location_el.get_text(strip=True) if location_el else None,
@@ -479,8 +483,8 @@ def main(argv: list[str] | None = None) -> int:
         description="Crawler CareerViet – thu thập tin tuyển dụng CNTT theo schema dự án"
     )
     parser.add_argument(
-        "--out", type=str, default=DUONG_DAN_MAC_DINH,
-        help="Đường dẫn file CSV đầu ra (mặc định: data/raw/careerviet.csv)",
+        "--out", type=Path, default=DUONG_DAN_MAC_DINH,
+        help="Đường dẫn file CSV đầu ra (mặc định: %(default)s)",
     )
     parser.add_argument(
         "--keywords", type=str, default=DUONG_DAN_TU_KHOA,

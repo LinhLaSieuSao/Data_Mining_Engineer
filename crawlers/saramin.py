@@ -23,7 +23,7 @@ TRANG_CHU = "https://saramin.vn"
 TEN_BOT = "DataMining-Crawler/1.0"
 THU_MUC = Path(__file__).resolve().parent.parent
 KEYWORDS_MAC_DINH = THU_MUC / "keyword.json"
-OUT_MAC_DINH = THU_MUC / "data/raw/saramin.csv"
+OUT_MAC_DINH = THU_MUC / "data" / "raw" / "raw_saramin.csv"
 SO_LAN_CUON = 8
 
 ANH_XA_COT = {
@@ -90,8 +90,10 @@ def _khung_tin(link: Tag) -> Tag:
         if len(job_links) > 1:
             break
         node = best = parent
-        classes = " ".join(parent.get("class", [])).casefold()
-        if parent.name in ("article", "li") or any(x in classes for x in ("job-card", "job-item", "job-list", "posting")):
+        if parent.css.match(
+            "article, li, [class*='job-card' i], [class*='job-item' i], "
+            "[class*='job-list' i], [class*='posting' i]"
+        ):
             break
     return best
 
@@ -138,8 +140,7 @@ def parse_cards(html: str) -> list[dict[str, Any]]:
                 candidate_url = str(candidate.get("href", ""))
                 candidate_text = _text(candidate)
                 if candidate_text and candidate_text != title and "/detail-jobs/" not in candidate_url and "/viec-lam/" not in candidate_url:
-                    classes = " ".join(candidate.get("class", [])).casefold()
-                    if "tag" not in classes and "skill" not in classes:
+                    if not candidate.css.match("[class*='tag' i], [class*='skill' i]"):
                         company = candidate_text
                         break
 
@@ -215,9 +216,9 @@ def _section_text(root: Tag, markers: tuple[str, ...], title: str | None) -> str
             if not isinstance(section.parent, Tag) or section.parent.name in ("main", "body", "html"):
                 break
             section = section.parent
-            if section.name in ("section", "article") or any(
-                key in " ".join(section.get("class", [])).casefold()
-                for key in ("description", "content", "section", "detail")
+            if section.css.match(
+                "section, article, [class*='description' i], [class*='content' i], "
+                "[class*='section' i], [class*='detail' i]"
             ):
                 break
         value = _text_block(section, title) if section else None

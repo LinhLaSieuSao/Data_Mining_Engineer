@@ -15,7 +15,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 if __package__ in (None, ""):
-    # Cho phép chạy: python crawlers/itviec_crawler.py
+    # Cho phép chạy trực tiếp bằng python crawlers/itviec.py.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from crawlers.base_crawler import (
@@ -62,7 +62,7 @@ BIEN_THE_NHOM = {
 KHOANG_NGHI = (3.0, 7.0)
 MAX_PAGES = 50
 CHECKPOINT = 10
-DUONG_DAN_CSV = THU_MUC_GOC / "data" / "raw_data" / "raw_data_itviec.csv"
+DUONG_DAN_CSV = THU_MUC_GOC / "data" / "raw" / "raw_itviec.csv"
 TU_KHOA = THU_MUC_GOC / "keyword.json"
 
 # ---------- Bóc tách HTML ----------
@@ -320,11 +320,11 @@ def tim_trang_sau(soup, url, so_trang):
     """Chỉ lấy tín hiệu còn trang; URL được dựng lại từ đường dẫn gốc."""
     for nut in soup.select('[rel~="next"], .pagination a, .pagination button, .ipagination a, .ipagination button'):
         if (nut.has_attr("disabled") or nut.has_attr("hidden") or nut.get("aria-disabled") == "true"
-                or "disabled" in nut.get("class", []) or nut.find_parent(class_="disabled")):
+                or "disabled" in nut.get_attribute_list("class") or nut.find_parent(class_="disabled")):
             continue
         trang_tiep = str(so_trang + 1)
         href = _attr(nut, "href") or ""
-        if ("next" in nut.get("rel", []) or _text(nut) == trang_tiep
+        if ("next" in nut.get_attribute_list("rel") or _text(nut) == trang_tiep
                 or parse_qs(_tach_url(href).query).get("page") == [trang_tiep]):
             phan = _tach_url(url)
             dich = urlunsplit((phan.scheme, phan.netloc, phan.path, f"page={trang_tiep}&source=search_job", ""))
