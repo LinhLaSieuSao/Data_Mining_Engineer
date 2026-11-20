@@ -1,6 +1,6 @@
 # Thu thập và khai phá dữ liệu tuyển dụng CNTT tại Việt Nam
 
-Đồ án môn Khai phá dữ liệu (ITEC3417) · Nhóm Tam Tấu · Lớp DH24DS01
+Đồ án môn Khai phá dữ liệu (ITEC3417) · Nhóm 9 · Lớp DH24DS01
 
 ## Chạy lại công cụ
 
