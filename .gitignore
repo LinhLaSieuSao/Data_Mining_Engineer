@@ -206,10 +206,7 @@ cython_debug/
 tempCodeRunnerFile.py
 *.tmp
 *.partial.jsonl
-data/*
-!data/raw/
-data/raw/*
-!data/raw/*.csv
+
 
 # Ruff stuff:
 .ruff_cache/
