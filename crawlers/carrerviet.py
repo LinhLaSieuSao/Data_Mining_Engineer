@@ -700,7 +700,7 @@ def main(argv: list[str] | None = None) -> int:
 
                         # Checkpoint lưu định kỳ
                         if so_tin_moi >= args.checkpoint:
-                            xuat_csv(duong_dan_ra, cac_dong)
+                            xuat_csv(duong_dan_ra, cac_dong, mot_dong_vat_ly=True)
                             print(f"  >>> CHECKPOINT: Đã lưu {len(cac_dong)} tin ({tong_moi_phien} mới) vào {duong_dan_ra}")
                             so_tin_moi = 0
 
@@ -722,7 +722,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         # Lưu file CSV lần cuối trước khi thoát
         try:
-            xuat_csv(duong_dan_ra, cac_dong)
+            xuat_csv(duong_dan_ra, cac_dong, mot_dong_vat_ly=True)
             print(f"\nHOÀN THÀNH: Đã lưu tổng cộng {len(cac_dong)} dòng dữ liệu vào {Path(duong_dan_ra).resolve()}")
             print(f"Thống kê phiên: {dict(thong_ke)} | Tin mới thu thập: {tong_moi_phien}")
         except Exception as e:
