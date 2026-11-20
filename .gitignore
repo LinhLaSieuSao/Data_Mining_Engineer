@@ -207,8 +207,9 @@ tempCodeRunnerFile.py
 *.tmp
 *.partial.jsonl
 data/*
-!data/raw_data/
-!data/raw_data/*.csv
+!data/raw/
+data/raw/*
+!data/raw/*.csv
 
 # Ruff stuff:
 .ruff_cache/

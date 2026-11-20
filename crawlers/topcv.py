@@ -27,7 +27,7 @@ from crawlers.browser import duyet_trang_topcv
 
 TRANG_CHU = "https://www.topcv.vn"
 TEN_BOT = "ITEC3417-TopCVResearchBot/1.0 (academic project)"
-DUONG_DAN_CSV = THU_MUC_GOC / "data" / "raw_data" / "raw_data_topcv.csv"
+DUONG_DAN_CSV = THU_MUC_GOC / "data" / "raw" / "raw_topcv.csv"
 MA_TIN = re.compile(r"(?:/viec-lam/[^/]+/|/brand/[^/]+/tuyen-dung/[^/]+-j)(\d+)\.html")
 NHAN_MO_TA = {
     "mô tả công việc", "mô tả", "chi tiết công việc",

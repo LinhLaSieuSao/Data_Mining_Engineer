@@ -19,11 +19,11 @@ from bs4 import BeautifulSoup
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from crawlers import itviec_crawler as itviec
+from crawlers import itviec
 from crawlers.base_crawler import (
     DUNG, doc_csv, duoc_phep, khoa_url, kiem_thu_robot, nghi_ngau_nhien, xuat_csv,
 )
-from crawlers.itviec_crawler import (
+from crawlers.itviec import (
     TEN_BOT as ITVIEC_USER_AGENT, TRANG_CHU as TRANG_CHU_ITVIEC,
     KHOANG_NGHI, bi_thu_thach, la_thu_thach_cloudflare, _tach_url as tach_url,
 )
