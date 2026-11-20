@@ -1,8 +1,10 @@
-"""Duyệt trang TopCV bằng HTTP và quản lý phiên xem lương ITviec."""
+"""Duyệt các lô tin qua HTTP và quản lý phiên đăng nhập để xem lương."""
 
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import shutil
 import sys
 import time
@@ -11,8 +13,9 @@ from html import escape
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
-from urllib.parse import urldefrag, urljoin
+from urllib.parse import parse_qsl, urlencode, urldefrag, urljoin, urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup
 
@@ -64,20 +67,174 @@ def duyet_trang_topcv(url, tai, max_pages):
             return
 
 
-def mo_chrome(playwright: Playwright, thu_muc_phien: Path) -> BrowserContext:
+def duyet_trang_saramin(url, tai, doc_the, max_pages):
+    """Tải từng lô tương ứng với cuộn danh sách Saramin qua tham số page."""
+    goc = urlsplit(url)
+    tham_so = [(key, value) for key, value in parse_qsl(goc.query, keep_blank_values=True) if key != "page"]
+    da_gap = set()
+    for so_trang in range(1, max_pages + 1):
+        if so_trang > 1:
+            query = urlencode([*tham_so, ("page", so_trang)])
+            url = urlunsplit((goc.scheme, goc.netloc, goc.path, query, ""))
+        html, ma = tai(url)
+        if ma != "ok" or html is None:
+            yield url, [], ma
+            return
+        soup = BeautifulSoup(html, "html.parser")
+        cards = doc_the(soup)
+        moi = [card for card in cards if card["Ma_Tin_Nguon"] not in da_gap]
+        yield url, moi, "ok"
+        if not moi:
+            return
+        da_gap.update(card["Ma_Tin_Nguon"] for card in moi)
+        for meta in du_lieu_nhung_saramin(soup, "meta"):
+            if (isinstance(meta, dict) and meta.get("current_page") == so_trang
+                    and isinstance(meta.get("last_page"), int)):
+                if so_trang >= meta["last_page"]:
+                    return
+                break
+
+
+def du_lieu_nhung_saramin(soup: BeautifulSoup, ten_truong: str) -> Iterator[object]:
+    """Đọc các giá trị JSON từ dữ liệu Next.js nhúng sẵn trong HTML Saramin."""
+    tien_to = "self.__next_f.push("
+    phan = []
+    for script in soup.find_all("script"):
+        noi_dung = (script.string or "").strip()
+        if not (noi_dung.startswith(tien_to) and noi_dung.endswith(")")):
+            continue
+        try:
+            chunk = json.loads(noi_dung[len(tien_to):-1])
+        except ValueError:
+            continue
+        if isinstance(chunk, list) and len(chunk) == 2 and chunk[0] == 1 and isinstance(chunk[1], str):
+            phan.append(chunk[1])
+    van_ban = "".join(phan)
+    decoder = json.JSONDecoder()
+    for match in re.finditer(rf'"{re.escape(ten_truong)}"\s*:\s*(?=[{{\[])', van_ban):
+        try:
+            gia_tri, _ = decoder.raw_decode(van_ban, match.end())
+        except ValueError:
+            continue
+        yield gia_tri
+
+
+def mo_chrome(
+    playwright: Playwright, thu_muc_phien: Path, *, user_agent: str | None = ITVIEC_USER_AGENT,
+) -> BrowserContext:
     """Mở cửa sổ Chrome với profile riêng, dùng Chromium nếu thiếu Chrome."""
     from playwright.sync_api import Error
 
     chromium = playwright.chromium
-    user_data_dir = str(thu_muc_phien)
+    options = {"user_data_dir": str(thu_muc_phien), "headless": False}
+    if user_agent is not None:
+        options["user_agent"] = user_agent
     try:
-        return chromium.launch_persistent_context(
-            user_data_dir=user_data_dir, channel="chrome", headless=False, user_agent=ITVIEC_USER_AGENT,
-        )
+        return chromium.launch_persistent_context(channel="chrome", **options)
     except Error as loi:
         if not any(dau in str(loi).casefold() for dau in ("not found", "doesn't exist", "executable doesn't exist")):
             raise
-        return chromium.launch_persistent_context(user_data_dir=user_data_dir, headless=False, user_agent=ITVIEC_USER_AGENT)
+        return chromium.launch_persistent_context(**options)
+
+
+@contextmanager
+def phien_luong_saramin(url_dang_nhap, rp, ten_bot, *, cdp_url: str | None = None) -> Iterator[Page]:
+    """Mở hoặc kết nối Chrome để người dùng đăng nhập Saramin qua giao diện chính thức."""
+    try:
+        from playwright.sync_api import Error, sync_playwright
+    except ImportError as loi:
+        raise RuntimeError("Cần Playwright để mở Chrome khi dùng --login hoặc --cdp.") from loi
+
+    if cdp_url:
+        try:
+            with sync_playwright() as playwright:
+                browser = playwright.chromium.connect_over_cdp(cdp_url)
+                try:
+                    context = browser.contexts[0] if browser.contexts else browser.new_context()
+                    trang = context.pages[0] if context.pages else context.new_page()
+                    yield trang
+                finally:
+                    pass
+        except Error as loi:
+            raise RuntimeError(f"Lỗi khi kết nối Chrome qua CDP ({cdp_url}): {loi}") from loi
+        return
+
+    goc = urlsplit(url_dang_nhap)
+    if not duoc_phep(rp, f"{goc.scheme}://{goc.netloc}", url_dang_nhap, ten_bot):
+        raise RuntimeError("robots.txt không cho phép mở trang đăng nhập Saramin.")
+    try:
+        with TemporaryDirectory(prefix="saramin-chrome-") as thu_muc, sync_playwright() as playwright:
+            context = mo_chrome(playwright, Path(thu_muc), user_agent=None)
+            try:
+                trang = context.pages[0] if context.pages else context.new_page()
+                response = trang.goto(url_dang_nhap, wait_until="domcontentloaded", timeout=20000)
+                if (response is None or response.status != 200
+                        or la_thu_thach_cloudflare(response.headers)
+                        or urlsplit(trang.url).netloc != goc.netloc):
+                    raise RuntimeError("Không mở được trang đăng nhập Saramin.")
+                print(f"Hãy đăng nhập Saramin trong cửa sổ Chrome. Chờ tối đa {THOI_GIAN_DANG_NHAP} giây.", flush=True)
+                han = time.monotonic() + THOI_GIAN_DANG_NHAP
+                while time.monotonic() < han:
+                    pages = context.pages
+                    if not pages:
+                        break
+                    for tab in pages:
+                        url = urlsplit(tab.url)
+                        if (url.scheme, url.netloc) != (goc.scheme, goc.netloc):
+                            continue
+                        try:
+                            da_dang_nhap = tab.evaluate("() => Boolean(localStorage.getItem('accessToken'))")
+                        except Error:
+                            continue  # Có thể trang đang chuyển hướng sau OAuth.
+                        if da_dang_nhap:
+                            yield tab
+                            return
+                    try:
+                        pages[0].wait_for_timeout(1000)
+                    except Error:
+                        continue
+                raise RuntimeError("Hết thời gian chờ hoặc cửa sổ đăng nhập Saramin đã đóng.")
+            finally:
+                context.close()
+    except Error as loi:
+        raise RuntimeError("Không thể mở hoặc tiếp tục phiên Chrome Saramin.") from loi
+
+
+def tai_trang_luong_saramin(trang: Page, url: str, selector: str, nhan_khoa: str) -> tuple[str | None, str]:
+    """Trả HTML của ô lương hiển thị sau khi giao diện tải xong phiên người dùng."""
+    from playwright.sync_api import Error, TimeoutError
+
+    try:
+        response = trang.goto(url, wait_until="domcontentloaded", timeout=20000)
+        if response is None:
+            return None, "loi_tam_thoi"
+        ma = response.status
+        if ma in (401, 403, 429) or la_thu_thach_cloudflare(response.headers):
+            return None, "bi_chan"
+        if ma in (404, 410):
+            return None, "khong_ton_tai"
+        if ma >= 500:
+            return None, "loi_tam_thoi"
+        dich, hien_tai = urlsplit(url), urlsplit(trang.url)
+        if ma != 200 or (hien_tai.scheme, hien_tai.netloc, hien_tai.path) != (dich.scheme, dich.netloc, dich.path):
+            return None, "bi_cam"
+        if bi_thu_thach(trang.content()):
+            return None, "bi_chan"
+        o_luong = trang.locator(selector).first
+        try:
+            trang.wait_for_function(
+                """([selector, locked]) => {
+                    const box = document.querySelector(selector);
+                    const text = box?.innerText.trim();
+                    return Boolean(text && !new RegExp(locked, 'i').test(text));
+                }""",
+                arg=[selector, nhan_khoa], timeout=10000,
+            )
+        except TimeoutError:
+            pass  # Trả nhãn khóa nếu phiên đã hết hạn để dừng bổ sung lương.
+        return (o_luong.evaluate("box => box.outerHTML") if o_luong.count() else ""), "ok"
+    except Error:
+        return None, "loi_tam_thoi"
 
 
 def kiem_tra_phien(trang: Page, rp, *, cho_xac_minh: bool = False) -> bool:
