@@ -24,7 +24,7 @@ if __package__ in (None, ""):
 
 from crawlers import itviec
 from crawlers.base_crawler import (
-    DUNG, doc_csv, duoc_phep, khoa_url, kiem_thu_robot, nghi_ngau_nhien, xuat_csv,
+    DUNG, co_muc_luong, doc_csv, duoc_phep, khoa_url, kiem_thu_robot, nghi_ngau_nhien, xuat_csv,
 )
 from crawlers.itviec import (
     TEN_BOT as ITVIEC_USER_AGENT, TRANG_CHU as TRANG_CHU_ITVIEC,
@@ -423,7 +423,7 @@ def bo_sung_luong(can_xem_luong, rp, cac_dong, thong_ke, cdp_url: str | None = N
                     thong_ke["bi_chan"] += 1
                     return "bi_chan"
                 luong = itviec.luong_goc(html)
-                if luong is not None:
+                if co_muc_luong(luong):
                     dong["Luong"] = luong
                     thong_ke["cap_nhat_luong"] += 1
                     if thong_ke["cap_nhat_luong"] % itviec.CHECKPOINT == 0:

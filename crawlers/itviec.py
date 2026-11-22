@@ -19,8 +19,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from crawlers.base_crawler import (
-    DUNG, THU_MUC_GOC, danh_dau_bat_dau, doc_csv, doc_schema,
-    duoc_phep, khoa_url, kiem_thu_robot, nghi_ngau_nhien, tai_thu_lai, xuat_csv,
+    DUNG, THU_MUC_GOC, co_muc_luong, danh_dau_bat_dau, doc_csv, doc_schema,
+    duoc_phep, khoa_url, kiem_thu_robot, luong_chua_co, nghi_ngau_nhien, tai_thu_lai, xuat_csv,
 )
 TEN_BOT = "ITEC3417-ITviecResearchBot/1.0 (academic project)"
 TRANG_CHU = "https://itviec.com"
@@ -62,8 +62,9 @@ BIEN_THE_NHOM = {
 KHOANG_NGHI = (3.0, 7.0)
 MAX_PAGES = 50
 CHECKPOINT = 10
-DUONG_DAN_CSV = THU_MUC_GOC / "data" / "raw" / "raw_itviec.csv"
+DUONG_DAN_CSV = THU_MUC_GOC / "data" / "raw_data" / "raw_itviec.csv"
 TU_KHOA = THU_MUC_GOC / "keyword.json"
+KHOA_LUONG = re.compile(r"sign in to view|đăng nhập để xem", re.I)
 
 # ---------- Bóc tách HTML ----------
 
@@ -78,29 +79,29 @@ def luong_goc(html):
     """Lấy nguyên văn .salary; câu khóa/không công bố/lỗi trả null."""
     soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
     van_ban = _text(soup.select_one(".salary"))
-    return None if can_bo_sung_luong(van_ban) else van_ban
-
-def can_bo_sung_luong(van_ban):
-    """Nhận diện ô lương cũ còn trống hoặc chứa câu giữ chỗ."""
-    if not van_ban:
-        return True
-    chu_thuong = str(van_ban).strip().casefold().replace("’", "'")
+    if not van_ban or can_bo_sung_luong(van_ban):
+        return None
+    chu_thuong = van_ban.casefold().replace("’", "'")
     cau_khong_co_muc_luong = {"you'll love it", "you will love it",
                              "you'll love this", "you will love this"}
-    return chu_thuong.rstrip("!.") in cau_khong_co_muc_luong or chu_thuong in {
+    if chu_thuong.rstrip("!.") in cau_khong_co_muc_luong or chu_thuong in {
         "error", "lỗi", "n/a", "unknown"
     } or any(
         dau in chu_thuong for dau in (
-            "sign in to view", "đăng nhập để xem",
             "không công bố", "chưa công bố", "not disclosed", "not available",
         )
-    )
+    ):
+        return None
+    return van_ban
+
+def can_bo_sung_luong(van_ban: str | None) -> bool:
+    """Chỉ thử bổ sung ô còn thiếu hoặc lương đang bị khóa."""
+    return luong_chua_co(van_ban) or bool(van_ban and KHOA_LUONG.search(van_ban))
 
 def bi_khoa_luong(html):
     """Phân biệt lương bị khóa với tin không công bố lương."""
     soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
-    van_ban = (_text(soup.select_one(".salary")) or "").casefold()
-    return any(dau in van_ban for dau in ("sign in to view", "đăng nhập để xem"))
+    return bool(KHOA_LUONG.search(_text(soup.select_one(".salary")) or ""))
 
 def _url_tin(href):
     """URL chi tiết tin, bỏ query/fragment; None nếu không phải tin của ITviec."""
@@ -403,7 +404,7 @@ def cao_truy_van(tu_khoa, url_goc, nhom_loc, *, rp, cac_dong, da_luu, thong_ke,
             chi_tiet = doc_chi_tiet(html, the["URL_Goc"].rsplit("/", 1)[-1])
             if dong_cu is not None:
                 luong = chi_tiet["Luong"] or the["Luong"]
-                if luong is not None:
+                if co_muc_luong(luong):
                     dong_cu["Luong"] = luong
                     thong_ke["cap_nhat_luong"] += 1
                     cap_nhat_trang += 1
@@ -489,9 +490,6 @@ def main(argv=None):
     except ValueError as loi:
         print(f"Dừng: {loi}")
         return 2
-    for dong in cac_dong:
-        if can_bo_sung_luong(dong.get("Luong")):
-            dong["Luong"] = None
     if any("Khop_Ky_Nang:" in str(d.get("Tu_Khoa_Tim_Kiem") or "")
            or re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(d.get("Ngay_Dang") or "")) for d in cac_dong):
         print("Cảnh báo: CSV cũ có dữ liệu đã chuẩn hóa; nên sao lưu rồi cào lại để dữ liệu thô đồng nhất.")

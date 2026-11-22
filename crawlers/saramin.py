@@ -19,8 +19,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from crawlers.base_crawler import (
-    DUNG, THU_MUC_GOC, danh_dau_bat_dau, doc_csv, doc_schema, duoc_phep, kiem_thu_robot,
-    nghi_ngau_nhien, tai_thu_lai, xuat_csv,
+    DUNG, THU_MUC_GOC, co_muc_luong, danh_dau_bat_dau, doc_csv, doc_schema, duoc_phep, kiem_thu_robot,
+    luong_chua_co, nghi_ngau_nhien, tai_thu_lai, xuat_csv,
 )
 from crawlers.browser import (
     du_lieu_nhung_saramin, duyet_trang_saramin, phien_luong_saramin, tai_trang_luong_saramin,
@@ -32,7 +32,7 @@ TRANG_TIM_KIEM = TRANG_CHU + "/viec-lam/tim-kiem"
 TRANG_DANG_NHAP = TRANG_CHU + "/ung-vien/dang-nhap"
 TEN_BOT = "DataMining-Crawler/1.0"
 KEYWORDS_MAC_DINH = THU_MUC_GOC / "keyword.json"
-OUT_MAC_DINH = THU_MUC_GOC / "data" / "raw" / "raw_saramin.csv"
+OUT_MAC_DINH = THU_MUC_GOC / "data" / "raw_data" / "raw_saramin.csv"
 DUONG_DAN_TIN = re.compile(r"/(?:viec-lam|detail-jobs)/(?P<slug>[^/]+-(?P<id>\d+))/?")
 THE_TIN = "div.text-card-foreground.cursor-pointer"
 THE_KY_NANG = 'a[href^="/jobs/search?keyword="], a[href^="/viec-lam/tim-kiem?keyword="]'
@@ -401,7 +401,7 @@ def _bo_sung_luong(args, rp, rows, stats, cdp_url: str | None = None):
     pending = []
     for row in rows:
         salary = row.get("Luong")
-        if isinstance(salary, str) and salary and not KHOA_LUONG.search(salary):
+        if not luong_chua_co(salary) and not KHOA_LUONG.search(salary or ""):
             continue
         job = _tin(row.get("URL_Goc"))
         if job:
@@ -435,9 +435,11 @@ def _bo_sung_luong(args, rp, rows, stats, cdp_url: str | None = None):
                     continue
                 value = luong_goc(html)
                 if value:
+                    locked = 0
+                    if not co_muc_luong(value):
+                        continue
                     row["Luong"] = value
                     stats["cap_nhat_luong"] += 1
-                    locked = 0
                     if stats["cap_nhat_luong"] % args.checkpoint == 0:
                         luu()
                 elif html:

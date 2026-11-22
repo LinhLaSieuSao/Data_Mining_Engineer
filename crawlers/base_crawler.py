@@ -28,6 +28,21 @@ TIMEOUT_ROBOTS = 15
 DUNG = ("bi_chan", "ngat_mach")
 
 
+def luong_chua_co(gia_tri: str | None) -> bool:
+    return gia_tri is None or gia_tri.strip().casefold() in {"", "null", "nan"}
+
+
+def co_muc_luong(gia_tri: str | None) -> bool:
+    """Kiểm tra kết quả bổ sung lương có số tiền thay vì nhãn trạng thái."""
+    if not gia_tri:
+        return False
+    if gia_tri.strip().casefold().startswith((
+        "thỏa thuận", "thoả thuận", "thương lượng", "cạnh tranh", "negotiable", "competitive",
+    )):
+        return False
+    return any(ky_tu.isdecimal() for ky_tu in gia_tri)
+
+
 @cache
 def doc_schema() -> dict:
     """Đọc schema dùng chung."""
